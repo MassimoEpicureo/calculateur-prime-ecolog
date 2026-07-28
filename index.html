@@ -1209,29 +1209,40 @@ function refreshTotals(c, ps) {
 }
 
 /* ═════════════════ IMPORT DES DOSSIERS ═════════════════ */
-/* Colonnes du modèle : A date · B affaire · C client · D désignation · E HT · F TTC
-   G n° CM · H n° BL · I n° facture · J mois facturation · K échéance · … · N rentabilité */
-const COL = { client:2, ht:4, ttc:5, facture:8, moisFact:9, echeance:10, rentab:13 };
+/* Deux sources possibles, deux mises en correspondance différentes :
 
-function ligneVersDossier(cells) {
-  const get = i => (cells[i] === undefined ? '' : cells[i]);
-  const client = String(get(COL.client) || '').trim();
+   1) Le modèle Excel généré (onglet « Dossiers ») — pas de colonne N° BL séparée :
+      A date · B affaire · C client · D désignation · E HT · F TTC · G n° CM
+      H n° facture · I mois de facturation · J date d'échéance · K relances
+      L contact · M rentabilité % · N marge attendue · O à importer
+
+   2) Un collage direct depuis le tableau brut de l'entreprise — qui a bien
+      une colonne N° BL entre le n° CM et le n° facture, et aucune colonne
+      de rentabilité (elle est saisie ensuite, ou reprend la valeur par défaut) :
+      A date · B affaire · C client · D désignation · E HT · F TTC · G n° CM
+      H n° BL · I n° facture · J mois de facturation · K date d'échéance … */
+const COL_TEMPLATE = { client:2, ht:4, ttc:5, facture:7, moisFact:8, echeance:9, rentab:12 };
+const COL_PASTE    = { client:2, ht:4, ttc:5, facture:8, moisFact:9, echeance:10 };
+
+function ligneVersDossier(cells, colMap) {
+  const get = i => (i === undefined || cells[i] === undefined ? '' : cells[i]);
+  const client = String(get(colMap.client) || '').trim();
   if (!client) return { skip: 'vide' };
-  let ttc = parseMoney(get(COL.ttc));
-  if (!ttc) ttc = parseMoney(get(COL.ht)) * 1.2;
-  const facture = String(get(COL.facture) || '').trim();
+  let ttc = parseMoney(get(colMap.ttc));
+  if (!ttc) ttc = parseMoney(get(colMap.ht)) * 1.2;
+  const facture = String(get(colMap.facture) || '').trim();
   if (ttc <= 0 || /^av/i.test(facture)) return { skip: 'avoir' };
-  let mois = parseMonth(get(COL.echeance)) || parseMonth(get(COL.moisFact));
+  let mois = parseMonth(get(colMap.echeance)) || parseMonth(get(colMap.moisFact));
   if (!mois) mois = $('monthSelect').value;
-  let rentab = parseMoney(get(COL.rentab));
+  let rentab = colMap.rentab === undefined ? 0 : parseMoney(get(colMap.rentab));
   if (!rentab) rentab = val('rentabDefaut');
   return { dossier: { id: uid++, client: client, facture: facture,
                       montant: Math.round(ttc * 100) / 100, mois: mois, rentab: rentab } };
 }
-function integrer(lignes) {
+function integrer(lignes, colMap) {
   let ok = 0, avoirs = 0, vides = 0;
   lignes.forEach(function (cells) {
-    const r = ligneVersDossier(cells);
+    const r = ligneVersDossier(cells, colMap);
     if (r.dossier) { dossiers.push(r.dossier); ok++; }
     else if (r.skip === 'avoir') avoirs++;
     else vides++;
@@ -1244,8 +1255,8 @@ function integrer(lignes) {
   if (vides) bits.push(vides + ' ligne' + (vides>1?'s':'') + ' vide' + (vides>1?'s':'') + ' ignorée' + (vides>1?'s':''));
   toast(bits.join(' · ') + (ok ? '. Pense à enregistrer le mois.' : '.'));
 }
-function estEntete(cells) {
-  const t = String(cells[COL.client] || '').toLowerCase();
+function estEntete(cells, colMap) {
+  const t = String(cells[(colMap || COL_TEMPLATE).client] || '').toLowerCase();
   return t === 'client' || t.indexOf('client') === 0;
 }
 
@@ -1259,9 +1270,9 @@ $('btnPasteOk').addEventListener('click', function () {
   const lignes = txt.split(/\r?\n/)
     .map(l => l.indexOf('\t') !== -1 ? l.split('\t') : l.split(';'))
     .filter(cells => cells.join('').trim() !== '')
-    .filter(cells => !estEntete(cells));
+    .filter(cells => !estEntete(cells, COL_PASTE));
   $('pasteOverlay').classList.remove('show');
-  integrer(lignes);
+  integrer(lignes, COL_PASTE);
 });
 
 /* — Fichier Excel ou CSV — */
@@ -1291,8 +1302,8 @@ $('fileSheet').addEventListener('change', function (e) {
       const lignes = String(ev.target.result).split(/\r?\n/)
         .map(l => l.indexOf('\t') !== -1 ? l.split('\t') : l.split(';'))
         .filter(cells => cells.join('').trim() !== '')
-        .filter(cells => !estEntete(cells));
-      integrer(lignes);
+        .filter(cells => !estEntete(cells, COL_TEMPLATE));
+      integrer(lignes, COL_TEMPLATE);
     };
     r.readAsText(file, 'utf-8');
     e.target.value = '';
@@ -1311,8 +1322,8 @@ $('fileSheet').addEventListener('change', function (e) {
         const wb = window.XLSX.read(new Uint8Array(ev.target.result), { type: 'array', cellDates: true });
         const nom = wb.SheetNames.indexOf('Dossiers') !== -1 ? 'Dossiers' : wb.SheetNames[0];
         const rows = window.XLSX.utils.sheet_to_json(wb.Sheets[nom], { header: 1, raw: true, defval: '' });
-        const lignes = rows.filter(cells => cells.join('').trim() !== '').filter(cells => !estEntete(cells));
-        integrer(lignes);
+        const lignes = rows.filter(cells => cells.join('').trim() !== '').filter(cells => !estEntete(cells, COL_TEMPLATE));
+        integrer(lignes, COL_TEMPLATE);
       } catch (err) {
         toast('Fichier illisible. Vérifie qu\'il s\'agit bien du modèle ECOLOG.');
       }
