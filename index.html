@@ -55,16 +55,24 @@
     border-radius: 8px; cursor: pointer; outline: none; transition: border-color 0.2s;
   }
   select:hover, select:focus { border-color: var(--accent); }
-  .io-row { display: flex; gap: 8px; }
+  .io-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
   .btn {
     background: var(--card); border: 1px solid var(--border2); color: var(--text2);
     font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 7px 14px;
-    border-radius: 8px; cursor: pointer; transition: all 0.18s;
+    border-radius: 8px; cursor: pointer; transition: all 0.18s; white-space: nowrap;
   }
   .btn:hover { border-color: var(--accent); color: var(--text); }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .btn-primary { background: rgba(59,126,248,0.14); border-color: rgba(59,126,248,0.4); color: var(--accent2); }
-  .btn-primary:hover { background: rgba(59,126,248,0.22); color: #fff; }
+  .btn-primary { background: rgba(59,126,248,0.16); border-color: rgba(59,126,248,0.45); color: var(--accent2); font-weight: 500; }
+  .btn-primary:hover { background: rgba(59,126,248,0.26); color: #fff; }
+  .btn-save { background: var(--green-bg); border-color: var(--green-border); color: var(--green); font-weight: 500; }
+  .btn-save:hover { background: rgba(34,197,94,0.20); border-color: var(--green); color: #fff; }
+  .save-state { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+  .save-state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+  .save-state.saved::before { background: var(--green); }
+  .save-state.dirty::before { background: var(--amber); }
+  .save-state.saved { color: var(--green); }
+  .save-state.dirty { color: var(--amber); }
 
   .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 1.75rem; }
   .tab {
@@ -96,12 +104,12 @@
   .field { margin-bottom: 0.85rem; }
   .field:last-child { margin-bottom: 0; }
   .field label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 5px; }
-  .field input {
+  .field input, .field select {
     width: 100%; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
     font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 9px 12px;
     border-radius: 8px; outline: none; transition: border-color 0.2s, background 0.2s;
   }
-  .field input:focus { border-color: var(--accent); background: var(--card2); }
+  .field input:focus, .field select:focus { border-color: var(--accent); background: var(--card2); }
   .field input[readonly] { background: transparent; border-color: transparent; color: var(--text2); font-weight: 500; font-size: 15px; padding-left: 0; cursor: default; }
   .field-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .divider { height: 1px; background: var(--border); margin: 1rem 0; }
@@ -145,7 +153,6 @@
   .total-prime-box .tpl { font-size: 11px; color: var(--text2); }
   .total-prime-box .tpv { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--green); white-space: nowrap; }
 
-  /* Jauge taux de marge */
   .gauge-value { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
   .gauge-big { font-family: 'DM Serif Display', serif; font-size: 42px; line-height: 1; color: var(--violet); }
   .gauge-delta { font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 9px; border-radius: 6px; }
@@ -185,6 +192,16 @@
 
   .section-title { font-family: 'DM Serif Display', serif; font-size: 18px; margin: 2rem 0 1rem; }
 
+  /* HISTORIQUE */
+  .hist-row { display: grid; grid-template-columns: 1.1fr 1fr 1fr 0.9fr 24px; gap: 8px; align-items: center; padding: 8px 4px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .hist-row:last-child { border-bottom: none; }
+  .hist-row.head { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border2); padding-bottom: 8px; }
+  .hist-row .hm { color: var(--text); }
+  .hist-row .hv { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; text-align: right; color: var(--text2); }
+  .hist-row.current { background: rgba(59,126,248,0.07); border-radius: 6px; }
+  .hist-row.current .hm { color: var(--accent2); font-weight: 500; }
+
+  /* TABLE PIPELINE */
   .table-wrap { overflow-x: auto; margin: 0 -0.4rem; }
   table.pipe { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 840px; }
   table.pipe th {
@@ -212,15 +229,35 @@
   .status-tag.later { background: rgba(99,130,190,0.10); color: var(--text3); border: 1px solid var(--border); }
   .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text3); font-size: 13px; line-height: 1.7; }
   .toolbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 1.1rem; flex-wrap: wrap; }
+  .rentab-def { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); }
+  .rentab-def input {
+    width: 62px; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 7px 8px; border-radius: 8px; text-align: right; outline: none;
+  }
+  .rentab-def input:focus { border-color: var(--accent); }
+
+  /* MODALE */
+  .overlay { position: fixed; inset: 0; background: rgba(5,8,14,0.72); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1.5rem; }
+  .overlay.show { display: flex; }
+  .modal { background: var(--card); border: 1px solid var(--border2); border-radius: 16px; padding: 1.6rem; max-width: 660px; width: 100%; max-height: 86vh; overflow-y: auto; }
+  .modal h4 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 6px; }
+  .modal textarea {
+    width: 100%; min-height: 190px; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; padding: 12px; border-radius: 10px;
+    outline: none; margin: 14px 0 6px; resize: vertical; line-height: 1.6;
+  }
+  .modal textarea:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
 
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
     background: var(--card2); border: 1px solid var(--border2); color: var(--text);
-    padding: 11px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: all 0.3s; z-index: 99; pointer-events: none;
+    padding: 11px 20px; border-radius: 10px; font-size: 13px; opacity: 0; transition: all 0.3s; z-index: 300;
+    pointer-events: none; max-width: 90vw; text-align: center;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .footer { margin-top: 3rem; text-align: center; font-size: 11px; color: var(--text3); }
+  .footer { margin-top: 3rem; text-align: center; font-size: 11px; color: var(--text3); line-height: 1.8; }
   .card, .card-accent, .conseil { animation: fadeUp 0.4s ease both; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -238,26 +275,14 @@
     <div class="header-right">
       <div class="month-select-wrap">
         <span class="month-label">Mois en cours</span>
-        <select id="monthSelect" aria-label="Mois en cours">
-          <option value="2026-04">Avril 2026</option>
-          <option value="2026-05">Mai 2026</option>
-          <option value="2026-06">Juin 2026</option>
-          <option value="2026-07" selected>Juillet 2026</option>
-          <option value="2026-08">Août 2026</option>
-          <option value="2026-09">Septembre 2026</option>
-          <option value="2026-10">Octobre 2026</option>
-          <option value="2026-11">Novembre 2026</option>
-          <option value="2026-12">Décembre 2026</option>
-          <option value="2027-01">Janvier 2027</option>
-          <option value="2027-02">Février 2027</option>
-          <option value="2027-03">Mars 2027</option>
-          <option value="2027-04">Avril 2027</option>
-        </select>
+        <select id="monthSelect" aria-label="Mois en cours"></select>
       </div>
       <div class="io-row">
-        <button class="btn" id="btnExport">Sauvegarder</button>
-        <button class="btn" id="btnImport">Charger</button>
-        <input type="file" id="fileInput" accept="application/json" hidden>
+        <span class="save-state" id="saveState">Aucune sauvegarde</span>
+        <button class="btn btn-save" id="btnSaveMonth">Enregistrer le mois</button>
+        <button class="btn" id="btnExport">Exporter</button>
+        <button class="btn" id="btnImportJson">Restaurer</button>
+        <input type="file" id="fileJson" accept="application/json" hidden>
       </div>
     </div>
   </div>
@@ -308,7 +333,7 @@
         </div>
 
         <div class="card">
-          <h3>Taux de marge cumulé depuis avril 2026</h3>
+          <h3>Taux de marge cumulé</h3>
           <div class="gauge-value">
             <span class="gauge-big" id="tauxBig">0,00 %</span>
             <span class="gauge-delta flat" id="tauxDelta">—</span>
@@ -325,6 +350,10 @@
             <span>Échelle 0 → 60 %</span>
           </div>
           <div class="divider"></div>
+          <div class="field">
+            <label for="debutExercice">Début d'exercice — point de départ du cumul</label>
+            <select id="debutExercice"></select>
+          </div>
           <div class="field-inline">
             <div class="field">
               <label for="caCumulAnt">CA cumulé avant ce mois (€)</label>
@@ -342,8 +371,18 @@
           <div class="divider"></div>
           <div class="metric-row"><span class="ml">CA cumulé avec ce mois</span><span class="mv neutral" id="res_caCumul">—</span></div>
           <div class="metric-row"><span class="ml">Coûts cumulés avec ce mois</span><span class="mv" id="res_coutsCumul" style="color:var(--text2)">—</span></div>
-          <div class="metric-row"><span class="ml">Résultat cumulé depuis avril</span><span class="mv" id="res_resCumul">—</span></div>
+          <div class="metric-row"><span class="ml">Résultat cumulé</span><span class="mv" id="res_resCumul">—</span></div>
           <div class="metric-row"><span class="ml">Taux de marge du mois seul</span><span class="mv" id="res_tauxMois">—</span></div>
+        </div>
+
+        <div class="card">
+          <h3>Historique enregistré</h3>
+          <div id="histContent"></div>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btnRecalcCumuls" style="flex:1;">Recalculer les cumuls</button>
+            <button class="btn" id="btnClearAll">Tout effacer</button>
+          </div>
+          <div class="hint" id="storageInfo" style="margin-top:10px;"></div>
         </div>
 
         <div class="card-accent">
@@ -390,7 +429,7 @@
         <div class="card">
           <h3>Barème — prime taux de marge</h3>
           <div id="baremeMarge"></div>
-          <div class="hint" style="margin-top:10px;">Calculée sur le taux cumulé depuis avril, pas sur le mois isolé.</div>
+          <div class="hint" style="margin-top:10px;">Calculée sur le taux cumulé depuis le début d'exercice, pas sur le mois isolé.</div>
         </div>
 
         <div class="card">
@@ -494,13 +533,20 @@
       <div class="toolbar">
         <div>
           <h3 style="margin-bottom:4px;">Dossiers facturés en attente d'encaissement</h3>
-          <div class="hint">Saisis le taux de rentabilité attendu de chaque dossier : la marge se calcule toute seule.</div>
+          <div class="hint">Importe le modèle Excel, ou colle directement les lignes copiées depuis ton tableau.</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="rentab-def">
+            <label for="rentabDefaut">Rentabilité par défaut</label>
+            <input type="number" id="rentabDefaut" value="30" step="1"> %
+          </span>
           <select id="filterMonth" aria-label="Filtrer par mois d'encaissement">
             <option value="all">Tous les mois</option>
           </select>
-          <button class="btn btn-primary" id="btnAddRow">Ajouter un dossier</button>
+          <button class="btn" id="btnImportFile">Importer un fichier</button>
+          <button class="btn" id="btnPaste">Coller des lignes</button>
+          <button class="btn btn-primary" id="btnAddRow">Ajouter</button>
+          <input type="file" id="fileSheet" accept=".xlsx,.xls,.csv" hidden>
         </div>
       </div>
 
@@ -523,7 +569,7 @@
         </table>
       </div>
       <div class="empty-state" id="pipeEmpty">
-        Aucun dossier en attente.<br>Ajoute une facture émise mais pas encore encaissée pour voir ce qu'elle rapporte.
+        Aucun dossier en attente.<br>Importe le modèle Excel, colle tes lignes, ou ajoute une facture à la main.
       </div>
     </div>
 
@@ -533,13 +579,30 @@
     </div>
   </div>
 
-  <div class="footer">ECOLOG Innovation · Outil interne de simulation commerciale</div>
+  <div class="footer">
+    ECOLOG Innovation · Outil interne de simulation commerciale<br>
+    <span id="footNote"></span>
+  </div>
+</div>
+
+<!-- MODALE COLLAGE -->
+<div class="overlay" id="pasteOverlay">
+  <div class="modal">
+    <h4>Coller des lignes</h4>
+    <div class="hint">Copie les lignes utiles depuis ton tableau d'entreprise et colle-les ci-dessous. L'ordre attendu est celui du modèle : date, n° affaire, client, désignation, HT, TTC, n° CM, n° BL, n° facture, mois de facturation, date d'échéance. Les avoirs et les montants négatifs sont écartés automatiquement.</div>
+    <textarea id="pasteArea" placeholder="09/01/26	ME202512192 - 6000800592	CARREFOUR - LE RHEU	Vente de 50 lisses feralco	1 640,66 €	1 968,79 €	CM5612	BL5560	FA6429	avril-26	21/06/2026"></textarea>
+    <div class="hint">Les colonnes doivent rester séparées par des tabulations — c'est le cas si tu copies depuis Excel.</div>
+    <div class="modal-actions">
+      <button class="btn" id="btnPasteCancel">Annuler</button>
+      <button class="btn btn-primary" id="btnPasteOk">Importer les lignes</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-/* ═════════ BARÈMES ═════════ */
+/* ═════════════════ BARÈMES ═════════════════ */
 const BAREME_MENSUEL = [
   { seuil: 4000,  prime: 125 },
   { seuil: 12080, prime: 250 },
@@ -559,28 +622,235 @@ const BAREME_MARGE = [
   { seuil: 0.47, prime: 1639 }
 ];
 const GAUGE_MAX = 0.60;
+const STORE_KEY = 'ecolog-primes-v1';
+const MOIS_DEBUT = '2026-04';
+const MOIS_FIN   = '2027-12';
+
+const CHAMPS = ['ca','chargesVar','fraisSiege','salaire','caCumulAnt','coutsCumulAnt','tauxM1',
+                'cumulGlobal','retard','apayer','totalFacture','coutEncaissPct','rentabDefaut'];
 
 let dossiers = [];
 let uid = 1;
+let archive = {};        /* { "2026-07": {...}, ... } */
+let loading = false;     /* bloque le marquage « modifié » pendant un chargement */
+let dirty = false;
 
+/* ═════════════════ OUTILS ═════════════════ */
 const $ = id => document.getElementById(id);
 const val = id => parseFloat($(id).value) || 0;
 const fmt = n => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n);
 const pct = n => new Intl.NumberFormat('fr-FR', { minimumFractionDigits:2, maximumFractionDigits:2 }).format(n*100) + ' %';
 const pts = n => (n>=0?'+':'−') + new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Math.abs(n)*100) + ' pts';
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const NOMS_MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const NOMS_COURTS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 
+function monthLabel(ym, court) {
+  if (!ym) return '—';
+  const p = String(ym).split('-');
+  const i = parseInt(p[1], 10) - 1;
+  const noms = court ? NOMS_COURTS : NOMS_MOIS;
+  if (i < 0 || i > 11) return ym;
+  return noms[i] + ' ' + p[0];
+}
+function listeMois(debut, fin) {
+  const out = [];
+  let [y, m] = debut.split('-').map(Number);
+  const [fy, fm] = fin.split('-').map(Number);
+  while (y < fy || (y === fy && m <= fm)) {
+    out.push(y + '-' + String(m).padStart(2, '0'));
+    m++; if (m > 12) { m = 1; y++; }
+  }
+  return out;
+}
+function moisPrecedent(ym) {
+  let [y, m] = ym.split('-').map(Number);
+  m--; if (m < 1) { m = 12; y--; }
+  return y + '-' + String(m).padStart(2, '0');
+}
+function toast(msg) {
+  const t = $('toast');
+  t.innerHTML = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 4200);
+}
+/* Convertit « 2 108,50 € », « -1 852,00 », « 1968.79 » en nombre */
+function parseMoney(v) {
+  if (typeof v === 'number') return v;
+  if (v == null) return 0;
+  let s = String(v).replace(/\u00A0|\u202F|\s/g, '').replace(/€|EUR/gi, '').trim();
+  if (!s) return 0;
+  const neg = /^\(.*\)$/.test(s) || s.indexOf('-') === 0;
+  s = s.replace(/[()\-]/g, '');
+  if (s.indexOf(',') !== -1 && s.indexOf('.') !== -1) s = s.replace(/\./g, '').replace(',', '.');
+  else if (s.indexOf(',') !== -1) s = s.replace(',', '.');
+  const n = parseFloat(s);
+  if (isNaN(n)) return 0;
+  return neg ? -n : n;
+}
+/* Renvoie « AAAA-MM » à partir d'une date Excel, d'un objet Date ou d'un texte JJ/MM/AAAA */
+function parseMonth(v) {
+  if (v == null || v === '') return '';
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + String(v.getMonth()+1).padStart(2,'0');
+  if (typeof v === 'number' && v > 20000 && v < 80000) {
+    const d = new Date(Date.UTC(1899, 11, 30) + v * 86400000);
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0');
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if (m) {
+    let y = parseInt(m[3], 10);
+    if (y < 100) y += 2000;
+    return y + '-' + String(parseInt(m[2],10)).padStart(2,'0');
+  }
+  m = s.match(/^(\d{4})-(\d{1,2})/);
+  if (m) return m[1] + '-' + String(parseInt(m[2],10)).padStart(2,'0');
+  /* « avril-26 », « juillet-2026 » */
+  m = s.toLowerCase().match(/^([a-zéûôà]+)[\s\-]+(\d{2,4})$/);
+  if (m) {
+    const i = NOMS_MOIS.indexOf(m[1]);
+    if (i !== -1) {
+      let y = parseInt(m[2], 10);
+      if (y < 100) y += 2000;
+      return y + '-' + String(i+1).padStart(2,'0');
+    }
+  }
+  return '';
+}
+
+/* ═════════════════ MÉMOIRE ═════════════════ */
+/* Trois niveaux : stockage persistant de l'aperçu Claude, stockage du navigateur
+   (fichier téléchargé ou hébergé), puis mémoire vive en dernier recours. */
+const Store = {
+  mode: 'memory',
+  mem: {},
+  detect: function () {
+    if (typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function') {
+      this.mode = 'claude'; return;
+    }
+    try {
+      window.localStorage.setItem('__ecolog_test__', '1');
+      window.localStorage.removeItem('__ecolog_test__');
+      this.mode = 'local';
+    } catch (e) { this.mode = 'memory'; }
+  },
+  get: function (key) {
+    const self = this;
+    if (this.mode === 'claude') {
+      return window.storage.get(key)
+        .then(r => (r && r.value) ? JSON.parse(r.value) : null)
+        .catch(() => null);
+    }
+    return new Promise(resolve => {
+      try {
+        if (self.mode === 'local') {
+          const v = window.localStorage.getItem(key);
+          resolve(v ? JSON.parse(v) : null);
+        } else resolve(self.mem[key] || null);
+      } catch (e) { resolve(null); }
+    });
+  },
+  set: function (key, value) {
+    const self = this;
+    if (this.mode === 'claude') {
+      return window.storage.set(key, JSON.stringify(value)).then(() => true).catch(() => false);
+    }
+    return new Promise(resolve => {
+      try {
+        if (self.mode === 'local') window.localStorage.setItem(key, JSON.stringify(value));
+        else self.mem[key] = value;
+        resolve(true);
+      } catch (e) { resolve(false); }
+    });
+  },
+  label: function () {
+    if (this.mode === 'claude') return 'Sauvegarde persistante active. Tes mois restent enregistrés d\'une session à l\'autre.';
+    if (this.mode === 'local') return 'Sauvegarde dans ce navigateur. Elle disparaît si tu vides les données du site — utilise Exporter pour une copie de secours.';
+    return 'Sauvegarde indisponible ici : les données ne survivront pas au rechargement. Utilise Exporter à chaque fin de saisie.';
+  }
+};
+
+function snapshot() {
+  const s = { salaireInclus: $('salaireInclus').checked, debutExercice: $('debutExercice').value, dossiers: dossiers.map(d => ({
+    client: d.client, facture: d.facture, montant: d.montant, mois: d.mois, rentab: d.rentab
+  })), savedAt: new Date().toISOString() };
+  CHAMPS.forEach(f => s[f] = $(f).value);
+  return s;
+}
+function applySnapshot(s) {
+  loading = true;
+  CHAMPS.forEach(f => { if (s[f] !== undefined) $(f).value = s[f]; });
+  if (typeof s.salaireInclus === 'boolean') $('salaireInclus').checked = s.salaireInclus;
+  if (s.debutExercice) $('debutExercice').value = s.debutExercice;
+  dossiers = (s.dossiers || []).map(x => ({
+    id: uid++, client: x.client || '', facture: x.facture || '',
+    montant: +x.montant || 0, mois: x.mois || '', rentab: +x.rentab || 0
+  }));
+  refreshFilter();
+  update();
+  loading = false;
+}
+
+function persist() {
+  return Store.set(STORE_KEY, { version: 2, archive: archive });
+}
+function saveMonth() {
+  const m = $('monthSelect').value;
+  archive[m] = snapshot();
+  return persist().then(ok => {
+    dirty = false;
+    renderHistorique();
+    updateSaveState();
+    toast(ok ? 'Mois de ' + monthLabel(m) + ' enregistré.'
+             : 'Enregistré en mémoire vive seulement — pense à exporter le fichier.');
+    return ok;
+  });
+}
+function updateSaveState() {
+  const el = $('saveState');
+  const m = $('monthSelect').value;
+  const saved = archive[m];
+  if (dirty) { el.className = 'save-state dirty'; el.textContent = 'Modifications non enregistrées'; }
+  else if (saved) {
+    el.className = 'save-state saved';
+    const d = new Date(saved.savedAt);
+    el.textContent = 'Enregistré ' + (isNaN(d) ? '' : ('le ' + d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})));
+  } else { el.className = 'save-state'; el.textContent = 'Mois non enregistré'; }
+}
+function markDirty() {
+  if (loading) return;
+  dirty = true;
+  updateSaveState();
+}
+
+/* Cumuls calculés à partir des mois enregistrés antérieurs au mois courant */
+function cumulsDepuisHistorique(moisCourant) {
+  const debut = $('debutExercice').value || MOIS_DEBUT;
+  let ca = 0, couts = 0, n = 0;
+  Object.keys(archive).sort().forEach(m => {
+    if (m < debut || m >= moisCourant) return;
+    const s = archive[m];
+    const sal = (s.salaireInclus === false) ? 0 : (parseFloat(s.salaire) || 0);
+    ca += parseFloat(s.ca) || 0;
+    couts += (parseFloat(s.chargesVar) || 0) + (parseFloat(s.fraisSiege) || 0) + sal;
+    n++;
+  });
+  return { ca: ca, couts: couts, n: n, taux: ca > 0 ? (ca - couts) / ca : 0 };
+}
+
+/* ═════════════════ CALCUL ═════════════════ */
 function primeFor(bareme, v) {
   let p = 0;
   for (let i = bareme.length - 1; i >= 0; i--) { if (v >= bareme[i].seuil) { p = bareme[i].prime; break; } }
   return p;
 }
 function nextStep(bareme, v) {
-  for (const row of bareme) { if (v < row.seuil) return row; }
+  for (let i = 0; i < bareme.length; i++) { if (v < bareme[i].seuil) return bareme[i]; }
   return null;
 }
 function renderBareme(id, bareme, v, label) {
-  $(id).innerHTML = bareme.map((row, i) => {
+  $(id).innerHTML = bareme.map(function (row, i) {
     const reached = v >= row.seuil;
     const active = reached && (i === bareme.length - 1 || v < bareme[i+1].seuil);
     return '<div class="bareme-row ' + (active ? 'active' : reached ? 'reached' : '') + '">' +
@@ -588,18 +858,6 @@ function renderBareme(id, bareme, v, label) {
       '<span class="br-prime">' + fmt(row.prime) + '</span></div>';
   }).join('');
 }
-function toast(msg) {
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2800);
-}
-function monthLabel(ym) {
-  if (!ym) return '—';
-  const parts = ym.split('-');
-  const noms = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
-  return (noms[parseInt(parts[1],10)-1] || '?') + ' ' + parts[0];
-}
-
-/* ═════════ CALCUL CENTRAL ═════════ */
 function compute() {
   const ca = val('ca'), cv = val('chargesVar'), fs = val('fraisSiege'), sal = val('salaire');
   const salOn = $('salaireInclus').checked;
@@ -613,19 +871,31 @@ function compute() {
   const tauxMois = ca > 0 ? mn / ca : 0;
   const tauxM1 = val('tauxM1') / 100;
   const cgCalc = val('cumulGlobal') + mn;
-  return { ca, cv, fs, sal, salOn, coutsMois, mb, mn, caCum, coutsCum, resCum, taux, tauxMois, tauxM1, cgCalc };
+  return { ca:ca, cv:cv, fs:fs, sal:sal, salOn:salOn, coutsMois:coutsMois, mb:mb, mn:mn,
+           caCum:caCum, coutsCum:coutsCum, resCum:resCum, taux:taux, tauxMois:tauxMois,
+           tauxM1:tauxM1, cgCalc:cgCalc };
 }
-
+function computeFrom(s) {
+  const ca = parseFloat(s.ca) || 0;
+  const sal = (s.salaireInclus === false) ? 0 : (parseFloat(s.salaire) || 0);
+  const couts = (parseFloat(s.chargesVar) || 0) + (parseFloat(s.fraisSiege) || 0) + sal;
+  const mn = ca - couts;
+  const caCum = (parseFloat(s.caCumulAnt) || 0) + ca;
+  const coutsCum = (parseFloat(s.coutsCumulAnt) || 0) + couts;
+  const cg = (parseFloat(s.cumulGlobal) || 0) + mn;
+  const taux = caCum > 0 ? (caCum - coutsCum) / caCum : 0;
+  const primes = primeFor(BAREME_MENSUEL, mn) + primeFor(BAREME_CUMUL, cg) + primeFor(BAREME_MARGE, taux);
+  return { ca:ca, couts:couts, mn:mn, cg:cg, taux:taux, primes:primes };
+}
 function pipeStats() {
   const filter = $('filterMonth').value;
   const rows = dossiers.filter(d => filter === 'all' || d.mois === filter);
   const montant = rows.reduce((s,d) => s + (d.montant||0), 0);
   const marge = rows.reduce((s,d) => s + (d.montant||0) * ((d.rentab||0)/100), 0);
-  const rentabMoy = montant > 0 ? marge / montant : 0;
-  return { rows, montant, marge, rentabMoy };
+  return { rows: rows, montant: montant, marge: marge, rentabMoy: montant > 0 ? marge/montant : 0 };
 }
 
-/* ═════════ RENDU TABLEAU DE BORD ═════════ */
+/* ═════════════════ RENDU ═════════════════ */
 function update() {
   const c = compute();
 
@@ -639,7 +909,6 @@ function update() {
   $('res_mn').textContent = fmt(c.mn);
   $('res_mn').className = 'mv ' + (c.mn >= 0 ? 'positive' : 'negative');
   $('res_taux').textContent = pct(c.taux);
-
   $('res_caCumul').textContent = fmt(c.caCum);
   $('res_coutsCumul').textContent = fmt(c.coutsCum);
   $('res_resCumul').textContent = fmt(c.resCum);
@@ -647,7 +916,6 @@ function update() {
   $('res_tauxMois').textContent = c.ca > 0 ? pct(c.tauxMois) : '—';
   $('res_tauxMois').className = 'mv ' + (c.tauxMois >= 0 ? 'positive' : 'negative');
 
-  /* Jauge */
   const dPts = c.taux - c.tauxM1;
   const dEuros = dPts * c.caCum;
   $('tauxBig').textContent = pct(c.taux);
@@ -667,7 +935,7 @@ function update() {
   $('gaugeNow').style.left = posNow + '%';
   $('gaugePrev').style.left = posPrev + '%';
   Array.prototype.forEach.call($('gaugeTrack').querySelectorAll('.gauge-tick'), t => t.remove());
-  BAREME_MARGE.forEach(row => {
+  BAREME_MARGE.forEach(function (row) {
     const tick = document.createElement('div');
     tick.className = 'gauge-tick' + (c.taux >= row.seuil ? ' hit' : '');
     tick.style.left = (row.seuil / GAUGE_MAX * 100) + '%';
@@ -675,7 +943,6 @@ function update() {
     $('gaugeTrack').appendChild(tick);
   });
 
-  /* Primes */
   const pm = primeFor(BAREME_MENSUEL, c.mn);
   const pc = primeFor(BAREME_CUMUL, c.cgCalc);
   const pt = primeFor(BAREME_MARGE, c.taux);
@@ -683,15 +950,13 @@ function update() {
   $('badgeRow').innerHTML = [['Mensuelle', pm], ['Cumul', pc], ['Taux de marge', pt]]
     .map(x => '<span class="badge ' + (x[1]>0?'earned':'none') + '">' + x[0] + ' : ' + (x[1]>0?fmt(x[1]):'aucune') + '</span>').join('');
 
-  const cgi = $('cumulGlobalIndicator');
-  cgi.className = 'cumul-pill ' + (c.cgCalc >= 0 ? 'positive' : 'negative');
+  $('cumulGlobalIndicator').className = 'cumul-pill ' + (c.cgCalc >= 0 ? 'positive' : 'negative');
   $('cumulGlobalValue').textContent = (c.cgCalc >= 0 ? '+' : '') + fmt(c.cgCalc);
 
   renderBareme('baremeMensuel', BAREME_MENSUEL, c.mn, s => 'Marge nette ≥ ' + fmt(s));
   renderBareme('baremeCumul', BAREME_CUMUL, c.cgCalc, s => 'Cumul ≥ ' + fmt(s));
   renderBareme('baremeMarge', BAREME_MARGE, c.taux, s => 'Taux ≥ ' + Math.round(s*100) + ' %');
 
-  /* Suivi de facturation */
   const retard = val('retard'), apayer = val('apayer'), totalFacture = val('totalFacture');
   $('retardDisplay').textContent = fmt(retard);
   $('apayerDisplay').textContent = fmt(apayer);
@@ -713,7 +978,6 @@ function update() {
   $('cumulFictifIndicator').className = 'cumul-pill ' + (cumulFictif >= 0 ? 'positive' : 'negative');
   $('cumulFictifValue').textContent = (cumulFictif >= 0 ? '+' : '') + fmt(cumulFictif);
 
-  /* Projection */
   const proj = $('projectionContent');
   if (c.cgCalc >= 0) {
     proj.innerHTML = '<div class="cumul-pill positive" style="margin-top:0;"><span class="cp-label">Cumul déjà positif</span><span class="cp-value">+' + fmt(c.cgCalc) + '</span></div>';
@@ -737,12 +1001,11 @@ function update() {
       fmt(Math.ceil(deficit / Math.max(1, moisEntier-1))) + '/mois</strong>.</div>';
   }
 
-  conseil(c, pm, pc, pt, retard, apayer);
+  conseil(c, pm, pt, retard, apayer);
   renderPipeline();
 }
 
-/* ═════════ CONSEIL ═════════ */
-function conseil(c, pm, pc, pt, retard, apayer) {
+function conseil(c, pm, pt, retard, apayer) {
   const parts = [];
   const ps = pipeStats();
 
@@ -754,11 +1017,8 @@ function conseil(c, pm, pc, pt, retard, apayer) {
     const src = ps.rentabMoy > 0 ? 'la rentabilité moyenne de ton pipeline' : 'une rentabilité de 40 %';
     let ligne = '<strong>Prime taux de marge</strong> — tu es à ' + pct(c.taux) + ', le palier suivant est à ' +
       Math.round(t*100) + ' % (' + fmt(nt.prime) + ', soit +' + fmt(nt.prime - pt) + '). Deux leviers : réduire les coûts cumulés de <strong>' + fmt(baisseCouts) + '</strong>';
-    if (rSup > t) {
-      ligne += ', ou encaisser <strong>' + fmt(baisseCouts / (rSup - t)) + '</strong> de CA supplémentaire à ' + src + ' (' + pct(rSup) + ').';
-    } else {
-      ligne += '. Attention : à ' + pct(rSup) + ', ton pipeline est moins rentable que le palier visé — l\'encaisser tirera ton taux vers le bas.';
-    }
+    if (rSup > t) ligne += ', ou encaisser <strong>' + fmt(baisseCouts / (rSup - t)) + '</strong> de CA supplémentaire à ' + src + ' (' + pct(rSup) + ').';
+    else ligne += '. Attention : à ' + pct(rSup) + ', ton pipeline est moins rentable que le palier visé — l\'encaisser tirera ton taux vers le bas.';
     parts.push(ligne);
   } else {
     parts.push('<strong>Palier maximum de prime taux de marge atteint (' + fmt(1639) + ')</strong>. À ' + pct(c.taux) +
@@ -781,11 +1041,64 @@ function conseil(c, pm, pc, pt, retard, apayer) {
     const pSim = primeFor(BAREME_MENSUEL, (c.ca + apayer) - c.coutsMois);
     if (pSim > pm) parts.push('En encaissant les <strong>' + fmt(apayer) + '</strong> prévus, ta prime mensuelle passerait à <strong>' + fmt(pSim) + '</strong> (+' + fmt(pSim - pm) + ').');
   }
-
   $('conseilText').innerHTML = parts.join('<br><br>');
 }
 
-/* ═════════ PIPELINE ═════════ */
+/* ═════════════════ HISTORIQUE ═════════════════ */
+function renderHistorique() {
+  const mois = Object.keys(archive).sort();
+  const cur = $('monthSelect').value;
+  const box = $('histContent');
+  if (!mois.length) {
+    box.innerHTML = '<div class="hint" style="padding:6px 0 2px;">Aucun mois enregistré. Remplis le tableau de bord puis clique sur « Enregistrer le mois » : les cumuls et le taux M-1 se calculeront ensuite tout seuls.</div>';
+    return;
+  }
+  let html = '<div class="hist-row head"><span>Mois</span><span class="hv">CA</span><span class="hv">Marge nette</span><span class="hv">Primes</span><span></span></div>';
+  mois.forEach(function (m) {
+    const r = computeFrom(archive[m]);
+    html += '<div class="hist-row' + (m === cur ? ' current' : '') + '">' +
+      '<span class="hm">' + monthLabel(m, true) + '</span>' +
+      '<span class="hv">' + fmt(r.ca) + '</span>' +
+      '<span class="hv" style="color:' + (r.mn>=0?'var(--green)':'var(--red)') + '">' + fmt(r.mn) + '</span>' +
+      '<span class="hv" style="color:' + (r.primes>0?'var(--green)':'var(--text3)') + '">' + fmt(r.primes) + '</span>' +
+      '<button class="row-del" data-hdel="' + m + '" title="Supprimer ce mois">✕</button></div>';
+  });
+  const tot = mois.reduce(function (s, m) { return s + computeFrom(archive[m]).primes; }, 0);
+  html += '<div class="hist-row" style="border-top:1px solid var(--border2);border-bottom:none;margin-top:4px;">' +
+    '<span class="hm" style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">Total primes</span>' +
+    '<span></span><span></span><span class="hv" style="color:var(--green);font-weight:600;">' + fmt(tot) + '</span><span></span></div>';
+  box.innerHTML = html;
+}
+$('histContent').addEventListener('click', function (e) {
+  const m = e.target.getAttribute('data-hdel');
+  if (!m) return;
+  if (!window.confirm('Supprimer définitivement le mois de ' + monthLabel(m) + ' de l\'historique ?')) return;
+  delete archive[m];
+  persist().then(function () { renderHistorique(); updateSaveState(); toast('Mois supprimé.'); });
+});
+
+$('btnRecalcCumuls').addEventListener('click', function () {
+  const cur = $('monthSelect').value;
+  const cum = cumulsDepuisHistorique(cur);
+  if (!cum.n) { toast('Aucun mois enregistré avant ' + monthLabel(cur) + '. Enregistre d\'abord les mois précédents.'); return; }
+  loading = true;
+  $('caCumulAnt').value = Math.round(cum.ca);
+  $('coutsCumulAnt').value = Math.round(cum.couts);
+  $('tauxM1').value = (cum.taux * 100).toFixed(2);
+  loading = false;
+  markDirty();
+  update();
+  toast('Cumuls recalculés sur <strong>' + cum.n + ' mois</strong> enregistré' + (cum.n>1?'s':'') + ' : ' +
+        fmt(cum.ca) + ' de CA, ' + fmt(cum.couts) + ' de coûts, taux M-1 à ' + pct(cum.taux) + '.');
+});
+
+$('btnClearAll').addEventListener('click', function () {
+  if (!window.confirm('Effacer tout l\'historique enregistré ? Cette action est définitive. Pense à Exporter avant.')) return;
+  archive = {};
+  persist().then(function () { renderHistorique(); updateSaveState(); toast('Historique effacé.'); });
+});
+
+/* ═════════════════ PIPELINE ═════════════════ */
 function statusOf(mois) {
   const cur = $('monthSelect').value;
   if (!mois) return ['later','—'];
@@ -795,9 +1108,11 @@ function statusOf(mois) {
 }
 function refreshFilter() {
   const sel = $('filterMonth'), prev = sel.value;
-  const mois = Array.from(new Set(dossiers.map(d => d.mois).filter(Boolean))).sort();
+  const mois = [];
+  dossiers.forEach(function (d) { if (d.mois && mois.indexOf(d.mois) === -1) mois.push(d.mois); });
+  mois.sort();
   sel.innerHTML = '<option value="all">Tous les mois</option>' +
-    mois.map(m => '<option value="' + m + '">' + monthLabel(m) + '</option>').join('');
+    mois.map(m => '<option value="' + m + '">' + monthLabel(m, true) + '</option>').join('');
   sel.value = mois.indexOf(prev) !== -1 ? prev : 'all';
 }
 function renderPipeline() {
@@ -806,7 +1121,7 @@ function renderPipeline() {
   $('tabCount').textContent = dossiers.length;
   $('pipeEmpty').style.display = ps.rows.length ? 'none' : 'block';
 
-  $('pipeBody').innerHTML = ps.rows.map(d => {
+  $('pipeBody').innerHTML = ps.rows.map(function (d) {
     const marge = (d.montant||0) * ((d.rentab||0)/100);
     const st = statusOf(d.mois);
     return '<tr data-id="' + d.id + '">' +
@@ -826,6 +1141,38 @@ function renderPipeline() {
     '<td class="num" style="color:var(--text2)">' + pct(ps.rentabMoy) + '</td>' +
     '<td class="num" style="color:var(--green)">' + fmt(ps.marge) + '</td><td></td></tr>' : '';
 
+  refreshTotals(c, ps);
+
+  if (!ps.rows.length) {
+    $('pipeConseil').textContent = 'Ajoute des dossiers pour voir leur effet sur tes primes.';
+    return;
+  }
+  const caSim = c.caCum + ps.montant;
+  const tauxSim = caSim > 0 ? (caSim - (c.coutsCum + ps.montant - ps.marge)) / caSim : 0;
+  const primeSim = primeFor(BAREME_MARGE, tauxSim), primeAct = primeFor(BAREME_MARGE, c.taux);
+  const p = [];
+  p.push('Le pipeline représente <strong>' + fmt(ps.montant) + '</strong> facturés pour <strong>' + fmt(ps.marge) +
+    '</strong> de marge attendue, soit ' + pct(ps.rentabMoy) + ' de rentabilité moyenne.');
+  if (primeSim > primeAct) p.push('Encaissé en totalité, il fait passer ta prime taux de marge de <strong>' + fmt(primeAct) +
+    '</strong> à <strong style="color:var(--green)">' + fmt(primeSim) + '</strong>, soit <strong>+' + fmt(primeSim - primeAct) + '</strong>.');
+  else if (tauxSim < c.taux) p.push('Attention : à ' + pct(ps.rentabMoy) + ', ce pipeline est moins rentable que ton taux cumulé actuel (' +
+    pct(c.taux) + '). L\'encaisser fait <strong style="color:var(--red)">baisser</strong> ton taux de ' + pts(tauxSim - c.taux).replace('−','') + '.');
+  else p.push('Ce pipeline ne change pas ton palier de prime taux de marge, qui reste à <strong>' + fmt(primeAct) + '</strong>.');
+
+  const enRetard = ps.rows.filter(d => statusOf(d.mois)[0] === 'late');
+  if (enRetard.length) {
+    const mt = enRetard.reduce((s,d) => s + (d.montant||0), 0);
+    p.push('<strong style="color:var(--red)">' + enRetard.length + ' dossier' + (enRetard.length>1?'s':'') + ' en retard</strong> pour ' +
+      fmt(mt) + ' : ' + enRetard.map(d => esc(d.client) || 'sans nom').join(', ') + '. C\'est la relance la plus rentable de ton mois.');
+  }
+  const best = ps.rows.slice().sort((a,b) => (b.montant*b.rentab) - (a.montant*a.rentab))[0];
+  if (best && best.montant > 0) p.push('Le dossier le plus contributif est <strong>' + (esc(best.client) || 'sans nom') + '</strong> : ' +
+    fmt(best.montant) + ' à ' + best.rentab + ' %, soit ' + fmt(best.montant * best.rentab / 100) + ' de marge.');
+  $('pipeConseil').innerHTML = p.join('<br><br>');
+}
+function refreshTotals(c, ps) {
+  c = c || compute();
+  ps = ps || pipeStats();
   $('pipeTotal').textContent = fmt(ps.montant);
   $('pipeCount').textContent = ps.rows.length
     ? ps.rows.length + ' facture' + (ps.rows.length>1?'s':'') + ' émise' + (ps.rows.length>1?'s':'') + ', non encaissée' + (ps.rows.length>1?'s':'')
@@ -845,59 +1192,6 @@ function renderPipeline() {
     : 'Renseigne les frais de siège dans le tableau de bord.';
 
   const caSim = c.caCum + ps.montant;
-  const coutsSim = c.coutsCum + (ps.montant - ps.marge);
-  const tauxSim = caSim > 0 ? (caSim - coutsSim) / caSim : 0;
-  const primeSim = primeFor(BAREME_MARGE, tauxSim);
-  const primeAct = primeFor(BAREME_MARGE, c.taux);
-  $('pipeTaux').textContent = pct(tauxSim);
-  $('pipeTauxTxt').innerHTML = 'Taux cumulé si tout est encaissé — <strong style="color:' +
-    (tauxSim>=c.taux?'var(--green)':'var(--red)') + '">' + pts(tauxSim - c.taux) + '</strong> vs ' + pct(c.taux) + ' aujourd\'hui.';
-  $('pipePrime').textContent = fmt(primeSim);
-  $('pipePrimeIndicator').className = 'cumul-pill ' + (primeSim > primeAct ? 'positive' : primeSim < primeAct ? 'negative' : 'neutral');
-
-  if (!ps.rows.length) {
-    $('pipeConseil').textContent = 'Ajoute des dossiers pour voir leur effet sur tes primes.';
-  } else {
-    const p = [];
-    p.push('Le pipeline représente <strong>' + fmt(ps.montant) + '</strong> facturés pour <strong>' + fmt(ps.marge) +
-      '</strong> de marge attendue, soit ' + pct(ps.rentabMoy) + ' de rentabilité moyenne.');
-    if (primeSim > primeAct) p.push('Encaissé en totalité, il fait passer ta prime taux de marge de <strong>' + fmt(primeAct) +
-      '</strong> à <strong style="color:var(--green)">' + fmt(primeSim) + '</strong>, soit <strong>+' + fmt(primeSim - primeAct) + '</strong>.');
-    else if (tauxSim < c.taux) p.push('Attention : à ' + pct(ps.rentabMoy) + ', ce pipeline est moins rentable que ton taux cumulé actuel (' +
-      pct(c.taux) + '). L\'encaisser fait <strong style="color:var(--red)">baisser</strong> ton taux de ' + pts(tauxSim - c.taux).replace('−','') + '.');
-    else p.push('Ce pipeline ne change pas ton palier de prime taux de marge, qui reste à <strong>' + fmt(primeAct) + '</strong>.');
-
-    const enRetard = ps.rows.filter(d => statusOf(d.mois)[0] === 'late');
-    if (enRetard.length) {
-      const mt = enRetard.reduce((s,d) => s + (d.montant||0), 0);
-      p.push('<strong style="color:var(--red)">' + enRetard.length + ' dossier' + (enRetard.length>1?'s':'') + ' en retard</strong> pour ' +
-        fmt(mt) + ' : ' + enRetard.map(d => esc(d.client) || 'sans nom').join(', ') + '. C\'est la relance la plus rentable de ton mois.');
-    }
-    const best = ps.rows.slice().sort((a,b) => (b.montant*b.rentab) - (a.montant*a.rentab))[0];
-    if (best && best.montant > 0) p.push('Le dossier le plus contributif est <strong>' + (esc(best.client) || 'sans nom') + '</strong> : ' +
-      fmt(best.montant) + ' à ' + best.rentab + ' %, soit ' + fmt(best.montant * best.rentab / 100) + ' de marge.');
-    $('pipeConseil').innerHTML = p.join('<br><br>');
-  }
-}
-
-/* Recalcule les totaux sans redessiner les lignes (préserve le focus de saisie) */
-function refreshTotals() {
-  const c = compute();
-  const ps = pipeStats();
-  $('pipeTotal').textContent = fmt(ps.montant);
-  $('pipeMarge').textContent = fmt(ps.marge);
-  $('pipeRentab').textContent = ps.montant > 0 ? 'Rentabilité moyenne pondérée : ' + pct(ps.rentabMoy) : 'Rentabilité moyenne pondérée : —';
-  const couv = c.fs > 0 ? ps.marge / c.fs * 100 : 0;
-  $('pipeCouv').textContent = c.fs > 0 ? Math.round(couv) + ' %' : '—';
-  $('pipeCouv').style.color = c.fs === 0 ? 'var(--text3)' : couv >= 100 ? 'var(--green)' : couv >= 60 ? 'var(--amber)' : 'var(--red)';
-  $('pipeCouvBar').style.width = Math.min(100, couv) + '%';
-  $('pipeCouvBar').style.background = couv >= 100 ? 'var(--green)' : couv >= 60 ? 'var(--amber)' : 'var(--red)';
-  $('pipeCouvTxt').innerHTML = c.fs > 0
-    ? (couv >= 100
-        ? 'La marge du pipeline couvre les ' + fmt(c.fs) + ' de frais de siège, avec <strong style="color:var(--green)">' + fmt(ps.marge - c.fs) + '</strong> d\'excédent.'
-        : 'Il manque <strong style="color:var(--red)">' + fmt(c.fs - ps.marge) + '</strong> de marge pour couvrir les ' + fmt(c.fs) + ' de frais de siège.')
-    : 'Renseigne les frais de siège dans le tableau de bord.';
-  const caSim = c.caCum + ps.montant;
   const tauxSim = caSim > 0 ? (caSim - (c.coutsCum + ps.montant - ps.marge)) / caSim : 0;
   $('pipeTaux').textContent = pct(tauxSim);
   $('pipeTauxTxt').innerHTML = 'Taux cumulé si tout est encaissé — <strong style="color:' +
@@ -905,6 +1199,7 @@ function refreshTotals() {
   const primeSim = primeFor(BAREME_MARGE, tauxSim), primeAct = primeFor(BAREME_MARGE, c.taux);
   $('pipePrime').textContent = fmt(primeSim);
   $('pipePrimeIndicator').className = 'cumul-pill ' + (primeSim > primeAct ? 'positive' : primeSim < primeAct ? 'negative' : 'neutral');
+
   const foot = $('pipeFoot').querySelector('tr');
   if (foot) {
     foot.children[1].textContent = fmt(ps.montant);
@@ -913,12 +1208,126 @@ function refreshTotals() {
   }
 }
 
-/* ═════════ ÉVÉNEMENTS ═════════ */
-$('pipeBody').addEventListener('input', e => {
-  const f = e.target.dataset.f;
+/* ═════════════════ IMPORT DES DOSSIERS ═════════════════ */
+/* Colonnes du modèle : A date · B affaire · C client · D désignation · E HT · F TTC
+   G n° CM · H n° BL · I n° facture · J mois facturation · K échéance · … · N rentabilité */
+const COL = { client:2, ht:4, ttc:5, facture:8, moisFact:9, echeance:10, rentab:13 };
+
+function ligneVersDossier(cells) {
+  const get = i => (cells[i] === undefined ? '' : cells[i]);
+  const client = String(get(COL.client) || '').trim();
+  if (!client) return { skip: 'vide' };
+  let ttc = parseMoney(get(COL.ttc));
+  if (!ttc) ttc = parseMoney(get(COL.ht)) * 1.2;
+  const facture = String(get(COL.facture) || '').trim();
+  if (ttc <= 0 || /^av/i.test(facture)) return { skip: 'avoir' };
+  let mois = parseMonth(get(COL.echeance)) || parseMonth(get(COL.moisFact));
+  if (!mois) mois = $('monthSelect').value;
+  let rentab = parseMoney(get(COL.rentab));
+  if (!rentab) rentab = val('rentabDefaut');
+  return { dossier: { id: uid++, client: client, facture: facture,
+                      montant: Math.round(ttc * 100) / 100, mois: mois, rentab: rentab } };
+}
+function integrer(lignes) {
+  let ok = 0, avoirs = 0, vides = 0;
+  lignes.forEach(function (cells) {
+    const r = ligneVersDossier(cells);
+    if (r.dossier) { dossiers.push(r.dossier); ok++; }
+    else if (r.skip === 'avoir') avoirs++;
+    else vides++;
+  });
+  refreshFilter();
+  update();
+  if (ok) markDirty();
+  const bits = ['<strong>' + ok + '</strong> dossier' + (ok>1?'s':'') + ' importé' + (ok>1?'s':'')];
+  if (avoirs) bits.push(avoirs + ' avoir' + (avoirs>1?'s':'') + ' écarté' + (avoirs>1?'s':''));
+  if (vides) bits.push(vides + ' ligne' + (vides>1?'s':'') + ' vide' + (vides>1?'s':'') + ' ignorée' + (vides>1?'s':''));
+  toast(bits.join(' · ') + (ok ? '. Pense à enregistrer le mois.' : '.'));
+}
+function estEntete(cells) {
+  const t = String(cells[COL.client] || '').toLowerCase();
+  return t === 'client' || t.indexOf('client') === 0;
+}
+
+/* — Collage — */
+$('btnPaste').addEventListener('click', function () { $('pasteArea').value = ''; $('pasteOverlay').classList.add('show'); setTimeout(() => $('pasteArea').focus(), 60); });
+$('btnPasteCancel').addEventListener('click', function () { $('pasteOverlay').classList.remove('show'); });
+$('pasteOverlay').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
+$('btnPasteOk').addEventListener('click', function () {
+  const txt = $('pasteArea').value;
+  if (!txt.trim()) { toast('Rien à importer.'); return; }
+  const lignes = txt.split(/\r?\n/)
+    .map(l => l.indexOf('\t') !== -1 ? l.split('\t') : l.split(';'))
+    .filter(cells => cells.join('').trim() !== '')
+    .filter(cells => !estEntete(cells));
+  $('pasteOverlay').classList.remove('show');
+  integrer(lignes);
+});
+
+/* — Fichier Excel ou CSV — */
+let sheetJsPromise = null;
+function chargerSheetJs() {
+  if (window.XLSX) return Promise.resolve(true);
+  if (sheetJsPromise) return sheetJsPromise;
+  sheetJsPromise = new Promise(function (resolve) {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+    setTimeout(() => resolve(!!window.XLSX), 9000);
+  });
+  return sheetJsPromise;
+}
+$('btnImportFile').addEventListener('click', function () { $('fileSheet').click(); });
+$('fileSheet').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const estCsv = /\.csv$/i.test(file.name);
+
+  if (estCsv) {
+    const r = new FileReader();
+    r.onload = function (ev) {
+      const lignes = String(ev.target.result).split(/\r?\n/)
+        .map(l => l.indexOf('\t') !== -1 ? l.split('\t') : l.split(';'))
+        .filter(cells => cells.join('').trim() !== '')
+        .filter(cells => !estEntete(cells));
+      integrer(lignes);
+    };
+    r.readAsText(file, 'utf-8');
+    e.target.value = '';
+    return;
+  }
+
+  toast('Lecture du fichier…');
+  chargerSheetJs().then(function (ok) {
+    if (!ok || !window.XLSX) {
+      toast('Impossible de lire le fichier Excel ici (bibliothèque bloquée). Enregistre l\'onglet Dossiers en CSV, ou utilise « Coller des lignes ».');
+      return;
+    }
+    const r = new FileReader();
+    r.onload = function (ev) {
+      try {
+        const wb = window.XLSX.read(new Uint8Array(ev.target.result), { type: 'array', cellDates: true });
+        const nom = wb.SheetNames.indexOf('Dossiers') !== -1 ? 'Dossiers' : wb.SheetNames[0];
+        const rows = window.XLSX.utils.sheet_to_json(wb.Sheets[nom], { header: 1, raw: true, defval: '' });
+        const lignes = rows.filter(cells => cells.join('').trim() !== '').filter(cells => !estEntete(cells));
+        integrer(lignes);
+      } catch (err) {
+        toast('Fichier illisible. Vérifie qu\'il s\'agit bien du modèle ECOLOG.');
+      }
+    };
+    r.readAsArrayBuffer(file);
+  });
+  e.target.value = '';
+});
+
+/* ═════════════════ ÉVÉNEMENTS TABLEAU ═════════════════ */
+$('pipeBody').addEventListener('input', function (e) {
+  const f = e.target.getAttribute('data-f');
   if (!f) return;
   const tr = e.target.closest('tr');
-  const d = dossiers.find(x => x.id === +tr.dataset.id);
+  const d = dossiers.filter(x => x.id === +tr.getAttribute('data-id'))[0];
   if (!d) return;
   d[f] = (f === 'montant' || f === 'rentab') ? (parseFloat(e.target.value) || 0) : e.target.value;
   if (f === 'montant' || f === 'rentab') {
@@ -935,79 +1344,168 @@ $('pipeBody').addEventListener('input', e => {
     refreshFilter();
   }
   refreshTotals();
+  markDirty();
 });
-$('pipeBody').addEventListener('change', e => { if (e.target.dataset.f) renderPipeline(); });
-$('pipeBody').addEventListener('click', e => {
-  const id = e.target.dataset.del;
+$('pipeBody').addEventListener('change', function (e) { if (e.target.getAttribute('data-f')) renderPipeline(); });
+$('pipeBody').addEventListener('click', function (e) {
+  const id = e.target.getAttribute('data-del');
   if (!id) return;
   dossiers = dossiers.filter(d => d.id !== +id);
-  refreshFilter();
-  renderPipeline();
+  refreshFilter(); renderPipeline(); markDirty();
 });
-$('btnAddRow').addEventListener('click', () => {
+$('btnAddRow').addEventListener('click', function () {
   const f = $('filterMonth').value;
-  dossiers.push({ id: uid++, client:'', facture:'', montant:0, mois: f !== 'all' ? f : $('monthSelect').value, rentab:30 });
-  refreshFilter();
-  renderPipeline();
+  dossiers.push({ id: uid++, client:'', facture:'', montant:0,
+                  mois: f !== 'all' ? f : $('monthSelect').value, rentab: val('rentabDefaut') });
+  refreshFilter(); renderPipeline(); markDirty();
   const inputs = $('pipeBody').querySelectorAll('tr:last-child input');
   if (inputs.length) inputs[0].focus();
 });
 $('filterMonth').addEventListener('change', renderPipeline);
-$('btnSyncPipe').addEventListener('click', () => {
+$('btnSyncPipe').addEventListener('click', function () {
   $('apayer').value = Math.round(pipeStats().montant);
-  update();
-  toast('Total du pipeline reporté');
+  markDirty(); update();
+  toast('Total du pipeline reporté dans l\'encaissement prévu.');
 });
 
-Array.prototype.forEach.call(document.querySelectorAll('.tab'), t => t.addEventListener('click', () => {
-  Array.prototype.forEach.call(document.querySelectorAll('.tab'), x => x.classList.remove('active'));
-  Array.prototype.forEach.call(document.querySelectorAll('.panel'), x => x.classList.remove('active'));
-  t.classList.add('active');
-  $('panel-' + t.dataset.tab).classList.add('active');
-}));
+Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
+  t.addEventListener('click', function () {
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), x => x.classList.remove('active'));
+    Array.prototype.forEach.call(document.querySelectorAll('.panel'), x => x.classList.remove('active'));
+    t.classList.add('active');
+    $('panel-' + t.getAttribute('data-tab')).classList.add('active');
+  });
+});
 
-const FIELDS = ['ca','chargesVar','fraisSiege','salaire','caCumulAnt','coutsCumulAnt','tauxM1','cumulGlobal','retard','apayer','totalFacture','coutEncaissPct'];
-FIELDS.forEach(id => $(id).addEventListener('input', update));
-$('monthSelect').addEventListener('change', update);
-$('salaireInclus').addEventListener('change', update);
+CHAMPS.forEach(function (id) { $(id).addEventListener('input', function () { markDirty(); update(); }); });
+$('salaireInclus').addEventListener('change', function () { markDirty(); update(); });
+$('debutExercice').addEventListener('change', function () { markDirty(); renderHistorique(); });
 
-/* ═════════ SAUVEGARDE / CHARGEMENT ═════════ */
-$('btnExport').addEventListener('click', () => {
-  const data = { version: 1, mois: $('monthSelect').value, salaireInclus: $('salaireInclus').checked, champs: {}, dossiers: dossiers };
-  FIELDS.forEach(f => data.champs[f] = $(f).value);
+/* ═════════════════ CHANGEMENT DE MOIS ═════════════════ */
+let moisActuel = null;
+$('monthSelect').addEventListener('change', function () {
+  const nouveau = $('monthSelect').value;
+  if (dirty && !window.confirm('Le mois de ' + monthLabel(moisActuel) + ' n\'est pas enregistré. Changer de mois maintenant perdra ces modifications. Continuer ?')) {
+    $('monthSelect').value = moisActuel;
+    return;
+  }
+  chargerMois(nouveau);
+});
+function chargerMois(m) {
+  moisActuel = m;
+  if (archive[m]) {
+    applySnapshot(archive[m]);
+    dirty = false;
+    toast('Mois de ' + monthLabel(m) + ' chargé depuis la mémoire.');
+  } else {
+    /* Nouveau mois : on repart de la structure du mois précédent enregistré */
+    const prec = archive[moisPrecedent(m)];
+    loading = true;
+    if (prec) {
+      const r = computeFrom(prec);
+      const cum = cumulsDepuisHistorique(m);
+      $('ca').value = 0;
+      $('chargesVar').value = 0;
+      $('fraisSiege').value = prec.fraisSiege || 0;
+      $('salaire').value = prec.salaire || 0;
+      $('salaireInclus').checked = prec.salaireInclus !== false;
+      $('cumulGlobal').value = Math.round(r.cg);
+      $('caCumulAnt').value = Math.round(cum.ca);
+      $('coutsCumulAnt').value = Math.round(cum.couts);
+      $('tauxM1').value = (cum.taux * 100).toFixed(2);
+      $('retard').value = 0;
+      $('apayer').value = 0;
+      $('totalFacture').value = 0;
+      dossiers = [];
+      refreshFilter();
+      loading = false;
+      update();
+      toast('Nouveau mois préparé à partir de ' + monthLabel(moisPrecedent(m)) +
+            ' : fond de roulement reporté à ' + fmt(r.cg) + ', taux M-1 à ' + pct(cum.taux) + '.');
+    } else {
+      loading = false;
+      update();
+    }
+    dirty = false;
+  }
+  renderHistorique();
+  updateSaveState();
+}
+
+/* ═════════════════ EXPORT / RESTAURATION ═════════════════ */
+$('btnSaveMonth').addEventListener('click', saveMonth);
+$('btnExport').addEventListener('click', function () {
+  const courant = snapshot();
+  const data = { version: 2, exportedAt: new Date().toISOString(),
+                 moisCourant: $('monthSelect').value, courant: courant, archive: archive };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'ecolog-primes-' + $('monthSelect').value + '.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
-  toast('Fichier téléchargé');
+  toast('Sauvegarde téléchargée.');
 });
-$('btnImport').addEventListener('click', () => $('fileInput').click());
-$('fileInput').addEventListener('change', e => {
+$('btnImportJson').addEventListener('click', function () { $('fileJson').click(); });
+$('fileJson').addEventListener('change', function (e) {
   const file = e.target.files[0];
   if (!file) return;
   const r = new FileReader();
-  r.onload = ev => {
+  r.onload = function (ev) {
     try {
       const d = JSON.parse(ev.target.result);
-      if (d.mois) $('monthSelect').value = d.mois;
-      if (typeof d.salaireInclus === 'boolean') $('salaireInclus').checked = d.salaireInclus;
-      Object.keys(d.champs || {}).forEach(k => { if ($(k)) $(k).value = d.champs[k]; });
-      dossiers = (d.dossiers || []).map(x => ({ id: uid++, client: x.client||'', facture: x.facture||'', montant: +x.montant||0, mois: x.mois||'', rentab: +x.rentab||0 }));
-      refreshFilter();
-      update();
-      toast('Données chargées');
+      if (d.archive) archive = d.archive;
+      else if (d.champs) { /* sauvegarde v1 */
+        const s = {}; Object.keys(d.champs).forEach(k => s[k] = d.champs[k]);
+        s.salaireInclus = d.salaireInclus; s.dossiers = d.dossiers || [];
+        archive[d.mois || $('monthSelect').value] = s;
+      }
+      const m = d.moisCourant || d.mois || $('monthSelect').value;
+      $('monthSelect').value = m;
+      moisActuel = m;
+      if (d.courant) { applySnapshot(d.courant); dirty = false; }
+      else if (archive[m]) { applySnapshot(archive[m]); dirty = false; }
+      persist().then(function () {
+        renderHistorique(); updateSaveState();
+        toast('Sauvegarde restaurée : <strong>' + Object.keys(archive).length + ' mois</strong> dans l\'historique.');
+      });
     } catch (err) {
-      toast('Fichier illisible — utilise un export de cet outil');
+      toast('Fichier illisible — utilise un export de cet outil.');
     }
     e.target.value = '';
   };
   r.readAsText(file);
 });
 
-refreshFilter();
-update();
+/* ═════════════════ DÉMARRAGE ═════════════════ */
+(function boot() {
+  const mois = listeMois(MOIS_DEBUT, MOIS_FIN);
+  const now = new Date();
+  let defaut = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  if (mois.indexOf(defaut) === -1) defaut = '2026-07';
+
+  $('monthSelect').innerHTML = mois.map(m =>
+    '<option value="' + m + '"' + (m === defaut ? ' selected' : '') + '>' + monthLabel(m) + '</option>').join('');
+  $('debutExercice').innerHTML = mois.map(m =>
+    '<option value="' + m + '"' + (m === MOIS_DEBUT ? ' selected' : '') + '>' + monthLabel(m) + '</option>').join('');
+  moisActuel = defaut;
+
+  Store.detect();
+  $('storageInfo').textContent = Store.label();
+  $('footNote').textContent = Store.mode === 'claude'
+    ? 'Mémoire persistante · modèle d\'import Excel fourni séparément'
+    : 'Mémoire navigateur · pense à exporter régulièrement';
+
+  Store.get(STORE_KEY).then(function (data) {
+    if (data && data.archive) archive = data.archive;
+    if (archive[defaut]) { applySnapshot(archive[defaut]); dirty = false; }
+    else { update(); }
+    renderHistorique();
+    updateSaveState();
+  }).catch(function () {
+    update(); renderHistorique(); updateSaveState();
+  });
+})();
 </script>
 </body>
 </html>
