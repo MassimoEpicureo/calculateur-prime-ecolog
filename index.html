@@ -211,22 +211,29 @@
   table.pipe th.num, table.pipe td.num { text-align: right; }
   table.pipe td { padding: 5px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   table.pipe tbody tr:hover td { background: rgba(99,130,190,0.04); }
-  table.pipe input {
+  table.pipe tbody tr.paid td { opacity: 0.62; }
+  table.pipe input, table.pipe select.cell {
     width: 100%; background: transparent; border: 1px solid transparent; color: var(--text);
     font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 7px 8px; border-radius: 6px; outline: none; transition: all 0.15s;
   }
-  table.pipe input:hover { border-color: var(--border); }
-  table.pipe input:focus { border-color: var(--accent); background: var(--bg2); }
+  table.pipe input:hover, table.pipe select.cell:hover { border-color: var(--border); }
+  table.pipe input:focus, table.pipe select.cell:focus { border-color: var(--accent); background: var(--bg2); }
+  table.pipe select.cell { cursor: pointer; }
+  table.pipe select.cell option { background: var(--card); color: var(--text); }
   table.pipe input.num { text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; }
   table.pipe td.calc { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 500; padding-right: 12px; }
   table.pipe tfoot td { border-bottom: none; border-top: 1px solid var(--border2); padding-top: 12px; font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
   table.pipe tfoot td.lbl { font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; }
   .row-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 15px; padding: 4px 8px; border-radius: 6px; line-height: 1; transition: all 0.15s; }
   .row-del:hover { color: var(--red); background: var(--red-bg); }
-  .status-tag { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 12px; white-space: nowrap; }
+  .status-tag { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 12px; white-space: nowrap; margin-top: 4px; }
   .status-tag.late { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
   .status-tag.soon { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
   .status-tag.later { background: rgba(99,130,190,0.10); color: var(--text3); border: 1px solid var(--border); }
+  .status-tag.paid { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .src-tag { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 12px; white-space: nowrap; }
+  .src-tag.rack { background: rgba(59,126,248,0.12); color: var(--accent2); border: 1px solid rgba(59,126,248,0.28); }
+  .src-tag.prot { background: rgba(167,139,250,0.12); color: var(--violet); border: 1px solid rgba(167,139,250,0.30); }
   .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text3); font-size: 13px; line-height: 1.7; }
   .toolbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 1.1rem; flex-wrap: wrap; }
   .rentab-def { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); }
@@ -270,7 +277,7 @@
     <div class="header-left">
       <div class="brand">ECOLOG Innovation</div>
       <div class="title">Calculateur de primes</div>
-      <div class="subtitle">Encaissement · Taux de marge · Fond de roulement · Dossiers en attente</div>
+      <div class="subtitle">Encaissement · Taux de marge · Fond de roulement · Prévisionnel</div>
     </div>
     <div class="header-right">
       <div class="month-select-wrap">
@@ -289,7 +296,7 @@
 
   <div class="tabs">
     <button class="tab active" data-tab="dashboard">Tableau de bord</button>
-    <button class="tab" data-tab="pipeline">Dossiers en attente<span class="tab-count" id="tabCount">0</span></button>
+    <button class="tab" data-tab="pipeline">Suivi des factures<span class="tab-count" id="tabCount">0</span></button>
   </div>
 
   <!-- ═════════ TABLEAU DE BORD ═════════ -->
@@ -366,7 +373,7 @@
           </div>
           <div class="field">
             <label for="tauxM1">Taux de marge du mois dernier (%)</label>
-            <input type="number" id="tauxM1" value="35.71" step="0.01">
+            <input type="number" id="tauxM1" value="29.51" step="0.01">
           </div>
           <div class="divider"></div>
           <div class="metric-row"><span class="ml">CA cumulé avec ce mois</span><span class="mv neutral" id="res_caCumul">—</span></div>
@@ -445,51 +452,36 @@
       </div>
     </div>
 
-    <div class="section-title">Suivi de facturation</div>
+    <!-- ═════════ PRÉVISIONNEL ═════════ -->
+    <div class="section-title">Prévisionnel des encaissements</div>
     <div class="track-grid">
       <div class="card">
-        <h3>Retard de paiement</h3>
-        <div class="field">
-          <label for="retard">Montant échu non encaissé TTC (€)</label>
-          <input type="number" id="retard" value="0" min="0" step="100">
-        </div>
-        <div class="track-inner"><span class="ti-l">Total en retard</span><span class="ti-v red" id="retardDisplay">0 €</span></div>
+        <h3>Encaissements prévus</h3>
+        <div class="big-line" style="color:var(--accent2);" id="fcEnc">0 €</div>
+        <div class="hint" id="fcEncTxt" style="margin-top:6px;">Total des factures en attente (hors payées).</div>
       </div>
       <div class="card">
-        <h3>Encaissement mois prochain</h3>
-        <div class="field">
-          <label for="apayer">Encaissement prévu TTC (€)</label>
-          <input type="number" id="apayer" value="0" min="0" step="100">
-        </div>
-        <button class="btn" id="btnSyncPipe" style="width:100%;margin-bottom:4px;">Reprendre le total du pipeline</button>
-        <div class="track-inner"><span class="ti-l">Prévu mois prochain</span><span class="ti-v blue" id="apayerDisplay">0 €</span></div>
-        <div class="pbar"><div class="pbar-fill" id="pbarApayer" style="width:0%"></div></div>
-        <div class="pbar-label" id="pbarApayerLabel">— % du total facturé</div>
+        <h3>Marge prévisionnelle</h3>
+        <div class="big-line" style="color:var(--green);" id="fcMarge">0 €</div>
+        <div class="hint" id="fcMargeTxt" style="margin-top:6px;">Rentabilité moyenne : —</div>
       </div>
       <div class="card">
-        <h3>Total facturé</h3>
-        <div class="field">
-          <label for="totalFacture">Montant total facturé TTC (€)</label>
-          <input type="number" id="totalFacture" value="0" min="0" step="100">
-        </div>
-        <div class="track-inner"><span class="ti-l">Facturé global</span><span class="ti-v green" id="totalFactureDisplay">0 €</span></div>
-        <div class="pbar"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
-        <div class="pbar-label" id="pbarLabel">0 % encaissé</div>
+        <h3>Frais de siège mensuels</h3>
+        <div class="big-line" style="color:var(--text2);" id="fcSiege">0 €</div>
+        <div class="hint" style="margin-top:6px;">Base de référence pour la couverture.</div>
       </div>
       <div class="card-accent">
-        <h3>Cumul fictif</h3>
-        <div class="hint" style="margin-bottom:10px;">Cumul global plus encaissements attendus, moins leurs coûts et les frais de siège.</div>
-        <div class="field">
-          <label for="coutEncaissPct">Coût des encaissements prévus (%)</label>
-          <input type="number" id="coutEncaissPct" value="70" min="0" max="100" step="1">
-        </div>
-        <div class="track-inner"><span class="ti-l">Cumul global</span><span class="ti-v" id="cumulFictifBase" style="color:var(--text2)">0 €</span></div>
-        <div class="track-inner"><span class="ti-l">Retards de paiement</span><span class="ti-v green" id="cumulFictifRetard">+ 0 €</span></div>
-        <div class="track-inner"><span class="ti-l">Encaissement mois prochain</span><span class="ti-v green" id="cumulFictifApayer">+ 0 €</span></div>
-        <div class="track-inner"><span class="ti-l">Coût des encaissements</span><span class="ti-v red" id="cumulFictifFraisMensuel">− 0 €</span></div>
-        <div class="track-inner"><span class="ti-l">Frais de siège</span><span class="ti-v red" id="cumulFictifSiege">− 0 €</span></div>
-        <div class="cumul-pill positive" id="cumulFictifIndicator"><span class="cp-label">Cumul fictif total</span><span class="cp-value" id="cumulFictifValue">0 €</span></div>
+        <h3>Couverture des frais de siège</h3>
+        <div class="big-line" style="color:var(--violet);" id="fcCouv">—</div>
+        <div class="pbar" style="height:6px;"><div class="pbar-fill" id="fcCouvBar" style="width:0%"></div></div>
+        <div class="hint" id="fcCouvTxt" style="margin-top:6px;">Marge prévisionnelle rapportée aux frais de siège.</div>
       </div>
+    </div>
+
+    <div class="card">
+      <h3>Encaissements &amp; marge prévisionnels par mois</h3>
+      <div style="position:relative;height:300px;margin-top:6px;"><canvas id="forecastChart" role="img" aria-label="Graphique des encaissements et marges prévisionnels par mois, avec ligne de frais de siège"></canvas></div>
+      <div class="hint" id="forecastNote" style="margin-top:12px;">Basé sur les factures en attente du suivi, regroupées par mois d'encaissement prévu. La ligne représente le seuil de frais de siège à couvrir.</div>
     </div>
 
     <div class="conseil">
@@ -498,7 +490,7 @@
     </div>
   </div>
 
-  <!-- ═════════ PIPELINE ═════════ -->
+  <!-- ═════════ PIPELINE / SUIVI FACTURES ═════════ -->
   <div class="panel" id="panel-pipeline">
 
     <div class="pipe-summary">
@@ -532,14 +524,19 @@
     <div class="card">
       <div class="toolbar">
         <div>
-          <h3 style="margin-bottom:4px;">Dossiers facturés en attente d'encaissement</h3>
-          <div class="hint">Importe le modèle Excel, ou colle directement les lignes copiées depuis ton tableau.</div>
+          <h3 style="margin-bottom:4px;">Suivi de l'ensemble des factures</h3>
+          <div class="hint">Ce suivi est global : les dossiers restent visibles quel que soit le mois sélectionné. Importe le modèle Excel, ou colle directement les lignes copiées depuis ton tableau.</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <span class="rentab-def">
             <label for="rentabDefaut">Rentabilité par défaut</label>
             <input type="number" id="rentabDefaut" value="30" step="1"> %
           </span>
+          <select id="filterStatut" aria-label="Filtrer par statut">
+            <option value="all">Tous les statuts</option>
+            <option value="attente">En attente</option>
+            <option value="paye">Déjà payés</option>
+          </select>
           <select id="filterMonth" aria-label="Filtrer par mois d'encaissement">
             <option value="all">Tous les mois</option>
           </select>
@@ -554,11 +551,11 @@
         <table class="pipe">
           <thead>
             <tr>
-              <th style="width:19%">Client</th>
-              <th style="width:12%">N° facture</th>
+              <th style="width:20%">Client</th>
+              <th style="width:12%">Source</th>
               <th class="num" style="width:14%">Montant TTC</th>
-              <th style="width:14%">Encaissement prévu</th>
-              <th style="width:10%">Statut</th>
+              <th style="width:13%">Encaissement prévu</th>
+              <th style="width:14%">Statut</th>
               <th class="num" style="width:10%">Rentabilité %</th>
               <th class="num" style="width:14%">Marge attendue</th>
               <th style="width:5%"></th>
@@ -569,12 +566,12 @@
         </table>
       </div>
       <div class="empty-state" id="pipeEmpty">
-        Aucun dossier en attente.<br>Importe le modèle Excel, colle tes lignes, ou ajoute une facture à la main.
+        Aucune facture enregistrée.<br>Importe le modèle Excel, colle tes lignes, ou ajoute une facture à la main.
       </div>
     </div>
 
     <div class="conseil">
-      <div class="conseil-head">Lecture du pipeline</div>
+      <div class="conseil-head">Lecture du suivi</div>
       <div class="conseil-text" id="pipeConseil">Ajoute des dossiers pour voir leur effet sur tes primes.</div>
     </div>
   </div>
@@ -589,7 +586,7 @@
 <div class="overlay" id="pasteOverlay">
   <div class="modal">
     <h4>Coller des lignes</h4>
-    <div class="hint">Copie les lignes utiles depuis ton tableau d'entreprise et colle-les ci-dessous. L'ordre attendu est celui du modèle : date, n° affaire, client, désignation, HT, TTC, n° CM, n° BL, n° facture, mois de facturation, date d'échéance. Les avoirs et les montants négatifs sont écartés automatiquement.</div>
+    <div class="hint">Copie les lignes utiles depuis ton tableau d'entreprise et colle-les ci-dessous. L'ordre attendu est celui du modèle : date, n° affaire, client, désignation, HT, TTC, n° CM, n° BL, n° facture, mois de facturation, date d'échéance. Les avoirs et les montants négatifs sont écartés automatiquement. La source (rack/protection) et le statut sont réglables ensuite dans le tableau.</div>
     <textarea id="pasteArea" placeholder="09/01/26	ME202512192 - 6000800592	CARREFOUR - LE RHEU	Vente de 50 lisses feralco	1 640,66 €	1 968,79 €	CM5612	BL5560	FA6429	avril-26	21/06/2026"></textarea>
     <div class="hint">Les colonnes doivent rester séparées par des tabulations — c'est le cas si tu copies depuis Excel.</div>
     <div class="modal-actions">
@@ -601,6 +598,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 /* ═════════════════ BARÈMES ═════════════════ */
 const BAREME_MENSUEL = [
@@ -608,7 +606,8 @@ const BAREME_MENSUEL = [
   { seuil: 12080, prime: 250 },
   { seuil: 21895, prime: 584 },
   { seuil: 36240, prime: 1139 },
-  { seuil: 49075, prime: 1639 }
+  { seuil: 49075, prime: 1639 },
+  { seuil: 74745, prime: 2639 }
 ];
 const BAREME_CUMUL = [
   { seuil: 4500,  prime: 292 },
@@ -627,13 +626,14 @@ const MOIS_DEBUT = '2026-04';
 const MOIS_FIN   = '2027-12';
 
 const CHAMPS = ['ca','chargesVar','fraisSiege','salaire','caCumulAnt','coutsCumulAnt','tauxM1',
-                'cumulGlobal','retard','apayer','totalFacture','coutEncaissPct','rentabDefaut'];
+                'cumulGlobal','rentabDefaut'];
 
 let dossiers = [];
 let uid = 1;
 let archive = {};        /* { "2026-07": {...}, ... } */
 let loading = false;     /* bloque le marquage « modifié » pendant un chargement */
 let dirty = false;
+let forecastChart = null;
 
 /* ═════════════════ OUTILS ═════════════════ */
 const $ = id => document.getElementById(id);
@@ -720,8 +720,6 @@ function parseMonth(v) {
 }
 
 /* ═════════════════ MÉMOIRE ═════════════════ */
-/* Trois niveaux : stockage persistant de l'aperçu Claude, stockage du navigateur
-   (fichier téléchargé ou hébergé), puis mémoire vive en dernier recours. */
 const Store = {
   mode: 'memory',
   mem: {},
@@ -771,10 +769,16 @@ const Store = {
   }
 };
 
+/* Le suivi des factures (dossiers) est désormais GLOBAL : il n'est plus stocké
+   dans le snapshot mensuel mais à part, et reste identique quel que soit le mois. */
+function serialiseDossiers() {
+  return dossiers.map(d => ({
+    client: d.client, source: d.source || 'rack', montant: d.montant,
+    mois: d.mois, rentab: d.rentab, paye: !!d.paye
+  }));
+}
 function snapshot() {
-  const s = { salaireInclus: $('salaireInclus').checked, debutExercice: $('debutExercice').value, dossiers: dossiers.map(d => ({
-    client: d.client, facture: d.facture, montant: d.montant, mois: d.mois, rentab: d.rentab
-  })), savedAt: new Date().toISOString() };
+  const s = { salaireInclus: $('salaireInclus').checked, debutExercice: $('debutExercice').value, savedAt: new Date().toISOString() };
   CHAMPS.forEach(f => s[f] = $(f).value);
   return s;
 }
@@ -783,17 +787,12 @@ function applySnapshot(s) {
   CHAMPS.forEach(f => { if (s[f] !== undefined) $(f).value = s[f]; });
   if (typeof s.salaireInclus === 'boolean') $('salaireInclus').checked = s.salaireInclus;
   if (s.debutExercice) $('debutExercice').value = s.debutExercice;
-  dossiers = (s.dossiers || []).map(x => ({
-    id: uid++, client: x.client || '', facture: x.facture || '',
-    montant: +x.montant || 0, mois: x.mois || '', rentab: +x.rentab || 0
-  }));
-  refreshFilter();
   update();
   loading = false;
 }
 
 function persist() {
-  return Store.set(STORE_KEY, { version: 2, archive: archive });
+  return Store.set(STORE_KEY, { version: 3, archive: archive, dossiers: serialiseDossiers() });
 }
 function saveMonth() {
   const m = $('monthSelect').value;
@@ -887,9 +886,21 @@ function computeFrom(s) {
   const primes = primeFor(BAREME_MENSUEL, mn) + primeFor(BAREME_CUMUL, cg) + primeFor(BAREME_MARGE, taux);
   return { ca:ca, couts:couts, mn:mn, cg:cg, taux:taux, primes:primes };
 }
+/* Lignes visibles dans le tableau (tous statuts, filtrées par mois + statut) */
+function pipeRows() {
+  const fMonth = $('filterMonth').value;
+  const fStat = $('filterStatut').value;
+  return dossiers.filter(function (d) {
+    if (fMonth !== 'all' && d.mois !== fMonth) return false;
+    if (fStat === 'attente' && d.paye) return false;
+    if (fStat === 'paye' && !d.paye) return false;
+    return true;
+  });
+}
+/* Statistiques prévisionnelles : uniquement les factures EN ATTENTE (non payées) */
 function pipeStats() {
-  const filter = $('filterMonth').value;
-  const rows = dossiers.filter(d => filter === 'all' || d.mois === filter);
+  const fMonth = $('filterMonth').value;
+  const rows = dossiers.filter(d => !d.paye && (fMonth === 'all' || d.mois === fMonth));
   const montant = rows.reduce((s,d) => s + (d.montant||0), 0);
   const marge = rows.reduce((s,d) => s + (d.montant||0) * ((d.rentab||0)/100), 0);
   return { rows: rows, montant: montant, marge: marge, rentabMoy: montant > 0 ? marge/montant : 0 };
@@ -957,27 +968,6 @@ function update() {
   renderBareme('baremeCumul', BAREME_CUMUL, c.cgCalc, s => 'Cumul ≥ ' + fmt(s));
   renderBareme('baremeMarge', BAREME_MARGE, c.taux, s => 'Taux ≥ ' + Math.round(s*100) + ' %');
 
-  const retard = val('retard'), apayer = val('apayer'), totalFacture = val('totalFacture');
-  $('retardDisplay').textContent = fmt(retard);
-  $('apayerDisplay').textContent = fmt(apayer);
-  $('totalFactureDisplay').textContent = fmt(totalFacture);
-  const r1 = totalFacture > 0 ? Math.min(100, c.ca/totalFacture*100) : 0;
-  $('pbarFill').style.width = Math.round(r1) + '%';
-  $('pbarLabel').textContent = Math.round(r1) + ' % encaissé';
-  const r2 = totalFacture > 0 ? Math.min(100, apayer/totalFacture*100) : 0;
-  $('pbarApayer').style.width = Math.round(r2) + '%';
-  $('pbarApayerLabel').textContent = totalFacture > 0 ? Math.round(r2) + ' % du total facturé' : '— % du total facturé';
-
-  const coutEnc = apayer * (val('coutEncaissPct') / 100);
-  const cumulFictif = c.cgCalc + retard + apayer - coutEnc - c.fs;
-  $('cumulFictifBase').textContent = fmt(c.cgCalc);
-  $('cumulFictifRetard').textContent = '+ ' + fmt(retard);
-  $('cumulFictifApayer').textContent = '+ ' + fmt(apayer);
-  $('cumulFictifFraisMensuel').textContent = '− ' + fmt(coutEnc);
-  $('cumulFictifSiege').textContent = '− ' + fmt(c.fs);
-  $('cumulFictifIndicator').className = 'cumul-pill ' + (cumulFictif >= 0 ? 'positive' : 'negative');
-  $('cumulFictifValue').textContent = (cumulFictif >= 0 ? '+' : '') + fmt(cumulFictif);
-
   const proj = $('projectionContent');
   if (c.cgCalc >= 0) {
     proj.innerHTML = '<div class="cumul-pill positive" style="margin-top:0;"><span class="cp-label">Cumul déjà positif</span><span class="cp-value">+' + fmt(c.cgCalc) + '</span></div>';
@@ -1001,11 +991,12 @@ function update() {
       fmt(Math.ceil(deficit / Math.max(1, moisEntier-1))) + '/mois</strong>.</div>';
   }
 
-  conseil(c, pm, pt, retard, apayer);
+  conseil(c, pm, pt);
+  renderForecast(c);
   renderPipeline();
 }
 
-function conseil(c, pm, pt, retard, apayer) {
+function conseil(c, pm, pt) {
   const parts = [];
   const ps = pipeStats();
 
@@ -1014,11 +1005,11 @@ function conseil(c, pm, pt, retard, apayer) {
     const t = nt.seuil;
     const baisseCouts = Math.max(0, c.coutsCum - c.caCum * (1 - t));
     const rSup = ps.rentabMoy > 0 ? ps.rentabMoy : 0.40;
-    const src = ps.rentabMoy > 0 ? 'la rentabilité moyenne de ton pipeline' : 'une rentabilité de 40 %';
+    const src = ps.rentabMoy > 0 ? 'la rentabilité moyenne de ton suivi' : 'une rentabilité de 40 %';
     let ligne = '<strong>Prime taux de marge</strong> — tu es à ' + pct(c.taux) + ', le palier suivant est à ' +
       Math.round(t*100) + ' % (' + fmt(nt.prime) + ', soit +' + fmt(nt.prime - pt) + '). Deux leviers : réduire les coûts cumulés de <strong>' + fmt(baisseCouts) + '</strong>';
     if (rSup > t) ligne += ', ou encaisser <strong>' + fmt(baisseCouts / (rSup - t)) + '</strong> de CA supplémentaire à ' + src + ' (' + pct(rSup) + ').';
-    else ligne += '. Attention : à ' + pct(rSup) + ', ton pipeline est moins rentable que le palier visé — l\'encaisser tirera ton taux vers le bas.';
+    else ligne += '. Attention : à ' + pct(rSup) + ', ton suivi est moins rentable que le palier visé — l\'encaisser tirera ton taux vers le bas.';
     parts.push(ligne);
   } else {
     parts.push('<strong>Palier maximum de prime taux de marge atteint (' + fmt(1639) + ')</strong>. À ' + pct(c.taux) +
@@ -1030,18 +1021,96 @@ function conseil(c, pm, pt, retard, apayer) {
 
   const nm = nextStep(BAREME_MENSUEL, c.mn);
   if (nm) parts.push('<strong>Prime mensuelle</strong> — il manque <strong>' + fmt(nm.seuil - c.mn) + '</strong> de marge nette pour le palier à <strong>' + fmt(nm.prime) + '</strong>.');
-  else parts.push('<strong>Palier maximum de prime mensuelle atteint (' + fmt(1639) + ')</strong>. Excellent mois.');
+  else parts.push('<strong>Palier maximum de prime mensuelle atteint (' + fmt(2639) + ')</strong>. Excellent mois.');
 
   const nc = nextStep(BAREME_CUMUL, c.cgCalc);
   if (nc && c.cgCalc >= 0) parts.push('<strong>Prime cumul</strong> — il manque <strong>' + fmt(nc.seuil - c.cgCalc) + '</strong> de fond de roulement pour le palier à <strong>' + fmt(nc.prime) + '</strong>.');
 
   if (c.salOn && c.sal > 0 && c.ca > 0) parts.push('Ton salaire de <strong>' + fmt(c.sal) + '</strong> pèse ' + pct(c.sal/c.ca) + ' de ton CA du mois et est compté dans les coûts.');
-  if (retard > 0) parts.push('<strong>' + fmt(retard) + '</strong> sont en retard de paiement. Encaissés ce mois, ton CA passerait à <strong>' + fmt(c.ca + retard) + '</strong>.');
-  if (apayer > 0) {
-    const pSim = primeFor(BAREME_MENSUEL, (c.ca + apayer) - c.coutsMois);
-    if (pSim > pm) parts.push('En encaissant les <strong>' + fmt(apayer) + '</strong> prévus, ta prime mensuelle passerait à <strong>' + fmt(pSim) + '</strong> (+' + fmt(pSim - pm) + ').');
+
+  if (ps.montant > 0) {
+    const pSim = primeFor(BAREME_MENSUEL, (c.ca + ps.montant) - c.coutsMois);
+    if (pSim > pm) parts.push('En encaissant les <strong>' + fmt(ps.montant) + '</strong> en attente dans ton suivi, ta prime mensuelle passerait à <strong>' + fmt(pSim) + '</strong> (+' + fmt(pSim - pm) + ').');
   }
   $('conseilText').innerHTML = parts.join('<br><br>');
+}
+
+/* ═════════════════ PRÉVISIONNEL ═════════════════ */
+function forecastData() {
+  const map = {};
+  dossiers.forEach(function (d) {
+    if (d.paye) return;
+    const m = d.mois || 'sans';
+    if (!map[m]) map[m] = { enc: 0, marge: 0 };
+    map[m].enc += d.montant || 0;
+    map[m].marge += (d.montant || 0) * ((d.rentab || 0) / 100);
+  });
+  const mois = Object.keys(map).filter(m => m !== 'sans').sort();
+  return { mois: mois, map: map, hasSans: !!map['sans'] };
+}
+function renderForecast(c) {
+  c = c || compute();
+  const fd = forecastData();
+  const totalEnc = fd.mois.reduce((s,m) => s + fd.map[m].enc, 0) + (fd.hasSans ? fd.map['sans'].enc : 0);
+  const totalMarge = fd.mois.reduce((s,m) => s + fd.map[m].marge, 0) + (fd.hasSans ? fd.map['sans'].marge : 0);
+  const rentab = totalEnc > 0 ? totalMarge / totalEnc : 0;
+
+  $('fcEnc').textContent = fmt(totalEnc);
+  $('fcMarge').textContent = fmt(totalMarge);
+  $('fcMargeTxt').textContent = totalEnc > 0 ? 'Rentabilité moyenne : ' + pct(rentab) : 'Rentabilité moyenne : —';
+  $('fcSiege').textContent = fmt(c.fs);
+
+  const couv = c.fs > 0 ? totalMarge / c.fs * 100 : 0;
+  $('fcCouv').textContent = c.fs > 0 ? Math.round(couv) + ' %' : '—';
+  $('fcCouv').style.color = c.fs === 0 ? 'var(--text3)' : couv >= 100 ? 'var(--green)' : couv >= 60 ? 'var(--amber)' : 'var(--violet)';
+  $('fcCouvBar').style.width = Math.min(100, couv) + '%';
+  $('fcCouvBar').style.background = couv >= 100 ? 'var(--green)' : couv >= 60 ? 'var(--amber)' : 'var(--violet)';
+  $('fcCouvTxt').innerHTML = c.fs > 0
+    ? (couv >= 100
+        ? 'La marge prévisionnelle couvre les frais de siège, avec <strong style="color:var(--green)">' + fmt(totalMarge - c.fs) + '</strong> d\'excédent.'
+        : 'Il manque <strong style="color:var(--violet)">' + fmt(c.fs - totalMarge) + '</strong> de marge pour couvrir les ' + fmt(c.fs) + ' de frais de siège.')
+    : 'Renseigne les frais de siège dans le tableau de bord.';
+
+  drawForecastChart(fd, c.fs);
+}
+function drawForecastChart(fd, fraisSiege) {
+  if (typeof Chart === 'undefined') return;
+  const labels = fd.mois.map(m => monthLabel(m, true));
+  const enc = fd.mois.map(m => Math.round(fd.map[m].enc));
+  const marge = fd.mois.map(m => Math.round(fd.map[m].marge));
+  const siegeLine = fd.mois.map(() => Math.round(fraisSiege));
+
+  const data = {
+    labels: labels,
+    datasets: [
+      { type:'bar', label:'Encaissements TTC', data: enc, backgroundColor:'rgba(59,126,248,0.55)', borderColor:'#3b7ef8', borderWidth:1, borderRadius:4, order:2 },
+      { type:'bar', label:'Marge prévisionnelle', data: marge, backgroundColor:'rgba(34,197,94,0.6)', borderColor:'#22c55e', borderWidth:1, borderRadius:4, order:2 },
+      { type:'line', label:'Frais de siège', data: siegeLine, borderColor:'#a78bfa', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, order:1 }
+    ]
+  };
+  const opts = {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode:'index', intersect:false },
+    plugins: {
+      legend: { labels: { color:'#8b9ab5', font:{ size:12 }, usePointStyle:true, boxWidth:8 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ' : ' + new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(ctx.parsed.y) } }
+    },
+    scales: {
+      x: { grid: { color:'rgba(99,130,190,0.10)' }, ticks: { color:'#8b9ab5', font:{ size:11 } } },
+      y: { grid: { color:'rgba(99,130,190,0.10)' }, ticks: { color:'#8b9ab5', font:{ size:11 }, callback: v => (v/1000) + 'k€' } }
+    }
+  };
+  if (forecastChart) {
+    forecastChart.data = data;
+    forecastChart.options = opts;
+    forecastChart.update();
+  } else {
+    forecastChart = new Chart($('forecastChart'), { data: data, options: opts });
+  }
+  const empty = fd.mois.length === 0;
+  $('forecastNote').innerHTML = empty
+    ? 'Aucune facture en attente à projeter. Ajoute des dossiers dans le suivi des factures.'
+    : 'Basé sur les factures en attente du suivi, regroupées par mois d\'encaissement prévu. La ligne violette est le seuil de frais de siège à couvrir chaque mois.';
 }
 
 /* ═════════════════ HISTORIQUE ═════════════════ */
@@ -1098,9 +1167,11 @@ $('btnClearAll').addEventListener('click', function () {
   persist().then(function () { renderHistorique(); updateSaveState(); toast('Historique effacé.'); });
 });
 
-/* ═════════════════ PIPELINE ═════════════════ */
-function statusOf(mois) {
+/* ═════════════════ PIPELINE / SUIVI ═════════════════ */
+function statusOf(d) {
+  if (d.paye) return ['paid','Déjà payé'];
   const cur = $('monthSelect').value;
+  const mois = d.mois;
   if (!mois) return ['later','—'];
   if (mois < cur) return ['late','En retard'];
   if (mois === cur) return ['soon','Ce mois'];
@@ -1115,28 +1186,40 @@ function refreshFilter() {
     mois.map(m => '<option value="' + m + '">' + monthLabel(m, true) + '</option>').join('');
   sel.value = mois.indexOf(prev) !== -1 ? prev : 'all';
 }
+function srcTag(source) {
+  return source === 'protections'
+    ? '<span class="src-tag prot">Protections</span>'
+    : '<span class="src-tag rack">Rack</span>';
+}
 function renderPipeline() {
   const c = compute();
   const ps = pipeStats();
+  const rows = pipeRows();
   $('tabCount').textContent = dossiers.length;
-  $('pipeEmpty').style.display = ps.rows.length ? 'none' : 'block';
+  $('pipeEmpty').style.display = rows.length ? 'none' : 'block';
 
-  $('pipeBody').innerHTML = ps.rows.map(function (d) {
+  $('pipeBody').innerHTML = rows.map(function (d) {
     const marge = (d.montant||0) * ((d.rentab||0)/100);
-    const st = statusOf(d.mois);
-    return '<tr data-id="' + d.id + '">' +
+    const st = statusOf(d);
+    return '<tr data-id="' + d.id + '"' + (d.paye ? ' class="paid"' : '') + '>' +
       '<td><input data-f="client" value="' + esc(d.client) + '" placeholder="Nom du client"></td>' +
-      '<td><input data-f="facture" value="' + esc(d.facture) + '" placeholder="F-000"></td>' +
+      '<td><select class="cell" data-f="source">' +
+        '<option value="rack"' + (d.source!=='protections'?' selected':'') + '>Rack</option>' +
+        '<option value="protections"' + (d.source==='protections'?' selected':'') + '>Protections</option>' +
+      '</select></td>' +
       '<td><input class="num" data-f="montant" type="number" min="0" step="100" value="' + (d.montant||0) + '"></td>' +
       '<td><input data-f="mois" type="month" value="' + (d.mois||'') + '"></td>' +
-      '<td><span class="status-tag ' + st[0] + '">' + st[1] + '</span></td>' +
+      '<td><select class="cell" data-f="paye">' +
+        '<option value="0"' + (!d.paye?' selected':'') + '>En attente</option>' +
+        '<option value="1"' + (d.paye?' selected':'') + '>Déjà payé</option>' +
+      '</select><br><span class="status-tag ' + st[0] + '">' + st[1] + '</span></td>' +
       '<td><input class="num" data-f="rentab" type="number" step="0.5" value="' + (d.rentab||0) + '"></td>' +
       '<td class="calc num" style="color:' + (marge>=0?'var(--green)':'var(--red)') + '">' + fmt(marge) + '</td>' +
       '<td><button class="row-del" data-del="' + d.id + '" title="Supprimer">✕</button></td></tr>';
   }).join('');
 
-  $('pipeFoot').innerHTML = ps.rows.length ?
-    '<tr><td class="lbl" colspan="2">' + ps.rows.length + ' dossier' + (ps.rows.length>1?'s':'') + '</td>' +
+  $('pipeFoot').innerHTML = rows.length ?
+    '<tr><td class="lbl" colspan="2">' + rows.length + ' facture' + (rows.length>1?'s':'') + '</td>' +
     '<td class="num" style="color:var(--accent2)">' + fmt(ps.montant) + '</td><td colspan="2"></td>' +
     '<td class="num" style="color:var(--text2)">' + pct(ps.rentabMoy) + '</td>' +
     '<td class="num" style="color:var(--green)">' + fmt(ps.marge) + '</td><td></td></tr>' : '';
@@ -1144,29 +1227,29 @@ function renderPipeline() {
   refreshTotals(c, ps);
 
   if (!ps.rows.length) {
-    $('pipeConseil').textContent = 'Ajoute des dossiers pour voir leur effet sur tes primes.';
+    $('pipeConseil').textContent = 'Ajoute des factures en attente pour voir leur effet sur tes primes.';
     return;
   }
   const caSim = c.caCum + ps.montant;
   const tauxSim = caSim > 0 ? (caSim - (c.coutsCum + ps.montant - ps.marge)) / caSim : 0;
   const primeSim = primeFor(BAREME_MARGE, tauxSim), primeAct = primeFor(BAREME_MARGE, c.taux);
   const p = [];
-  p.push('Le pipeline représente <strong>' + fmt(ps.montant) + '</strong> facturés pour <strong>' + fmt(ps.marge) +
+  p.push('Les factures en attente représentent <strong>' + fmt(ps.montant) + '</strong> facturés pour <strong>' + fmt(ps.marge) +
     '</strong> de marge attendue, soit ' + pct(ps.rentabMoy) + ' de rentabilité moyenne.');
-  if (primeSim > primeAct) p.push('Encaissé en totalité, il fait passer ta prime taux de marge de <strong>' + fmt(primeAct) +
+  if (primeSim > primeAct) p.push('Encaissé en totalité, cela fait passer ta prime taux de marge de <strong>' + fmt(primeAct) +
     '</strong> à <strong style="color:var(--green)">' + fmt(primeSim) + '</strong>, soit <strong>+' + fmt(primeSim - primeAct) + '</strong>.');
-  else if (tauxSim < c.taux) p.push('Attention : à ' + pct(ps.rentabMoy) + ', ce pipeline est moins rentable que ton taux cumulé actuel (' +
-    pct(c.taux) + '). L\'encaisser fait <strong style="color:var(--red)">baisser</strong> ton taux de ' + pts(tauxSim - c.taux).replace('−','') + '.');
-  else p.push('Ce pipeline ne change pas ton palier de prime taux de marge, qui reste à <strong>' + fmt(primeAct) + '</strong>.');
+  else if (tauxSim < c.taux) p.push('Attention : à ' + pct(ps.rentabMoy) + ', ces factures sont moins rentables que ton taux cumulé actuel (' +
+    pct(c.taux) + '). Les encaisser fait <strong style="color:var(--red)">baisser</strong> ton taux de ' + pts(tauxSim - c.taux).replace('−','') + '.');
+  else p.push('Ces factures ne changent pas ton palier de prime taux de marge, qui reste à <strong>' + fmt(primeAct) + '</strong>.');
 
-  const enRetard = ps.rows.filter(d => statusOf(d.mois)[0] === 'late');
+  const enRetard = ps.rows.filter(d => statusOf(d)[0] === 'late');
   if (enRetard.length) {
     const mt = enRetard.reduce((s,d) => s + (d.montant||0), 0);
-    p.push('<strong style="color:var(--red)">' + enRetard.length + ' dossier' + (enRetard.length>1?'s':'') + ' en retard</strong> pour ' +
+    p.push('<strong style="color:var(--red)">' + enRetard.length + ' facture' + (enRetard.length>1?'s':'') + ' en retard</strong> pour ' +
       fmt(mt) + ' : ' + enRetard.map(d => esc(d.client) || 'sans nom').join(', ') + '. C\'est la relance la plus rentable de ton mois.');
   }
   const best = ps.rows.slice().sort((a,b) => (b.montant*b.rentab) - (a.montant*a.rentab))[0];
-  if (best && best.montant > 0) p.push('Le dossier le plus contributif est <strong>' + (esc(best.client) || 'sans nom') + '</strong> : ' +
+  if (best && best.montant > 0) p.push('La facture la plus contributive est <strong>' + (esc(best.client) || 'sans nom') + '</strong> : ' +
     fmt(best.montant) + ' à ' + best.rentab + ' %, soit ' + fmt(best.montant * best.rentab / 100) + ' de marge.');
   $('pipeConseil').innerHTML = p.join('<br><br>');
 }
@@ -1175,8 +1258,8 @@ function refreshTotals(c, ps) {
   ps = ps || pipeStats();
   $('pipeTotal').textContent = fmt(ps.montant);
   $('pipeCount').textContent = ps.rows.length
-    ? ps.rows.length + ' facture' + (ps.rows.length>1?'s':'') + ' émise' + (ps.rows.length>1?'s':'') + ', non encaissée' + (ps.rows.length>1?'s':'')
-    : 'Aucun dossier';
+    ? ps.rows.length + ' facture' + (ps.rows.length>1?'s':'') + ' en attente'
+    : 'Aucune facture en attente';
   $('pipeMarge').textContent = fmt(ps.marge);
   $('pipeRentab').textContent = ps.montant > 0 ? 'Rentabilité moyenne pondérée : ' + pct(ps.rentabMoy) : 'Rentabilité moyenne pondérée : —';
 
@@ -1187,7 +1270,7 @@ function refreshTotals(c, ps) {
   $('pipeCouvBar').style.background = couv >= 100 ? 'var(--green)' : couv >= 60 ? 'var(--amber)' : 'var(--red)';
   $('pipeCouvTxt').innerHTML = c.fs > 0
     ? (couv >= 100
-        ? 'La marge du pipeline couvre les ' + fmt(c.fs) + ' de frais de siège, avec <strong style="color:var(--green)">' + fmt(ps.marge - c.fs) + '</strong> d\'excédent.'
+        ? 'La marge en attente couvre les ' + fmt(c.fs) + ' de frais de siège, avec <strong style="color:var(--green)">' + fmt(ps.marge - c.fs) + '</strong> d\'excédent.'
         : 'Il manque <strong style="color:var(--red)">' + fmt(c.fs - ps.marge) + '</strong> de marge pour couvrir les ' + fmt(c.fs) + ' de frais de siège.')
     : 'Renseigne les frais de siège dans le tableau de bord.';
 
@@ -1199,28 +1282,9 @@ function refreshTotals(c, ps) {
   const primeSim = primeFor(BAREME_MARGE, tauxSim), primeAct = primeFor(BAREME_MARGE, c.taux);
   $('pipePrime').textContent = fmt(primeSim);
   $('pipePrimeIndicator').className = 'cumul-pill ' + (primeSim > primeAct ? 'positive' : primeSim < primeAct ? 'negative' : 'neutral');
-
-  const foot = $('pipeFoot').querySelector('tr');
-  if (foot) {
-    foot.children[1].textContent = fmt(ps.montant);
-    foot.children[3].textContent = pct(ps.rentabMoy);
-    foot.children[4].textContent = fmt(ps.marge);
-  }
 }
 
 /* ═════════════════ IMPORT DES DOSSIERS ═════════════════ */
-/* Deux sources possibles, deux mises en correspondance différentes :
-
-   1) Le modèle Excel généré (onglet « Dossiers ») — pas de colonne N° BL séparée :
-      A date · B affaire · C client · D désignation · E HT · F TTC · G n° CM
-      H n° facture · I mois de facturation · J date d'échéance · K relances
-      L contact · M rentabilité % · N marge attendue · O à importer
-
-   2) Un collage direct depuis le tableau brut de l'entreprise — qui a bien
-      une colonne N° BL entre le n° CM et le n° facture, et aucune colonne
-      de rentabilité (elle est saisie ensuite, ou reprend la valeur par défaut) :
-      A date · B affaire · C client · D désignation · E HT · F TTC · G n° CM
-      H n° BL · I n° facture · J mois de facturation · K date d'échéance … */
 const COL_TEMPLATE = { client:2, ht:4, ttc:5, facture:7, moisFact:8, echeance:9, rentab:12 };
 const COL_PASTE    = { client:2, ht:4, ttc:5, facture:8, moisFact:9, echeance:10 };
 
@@ -1236,8 +1300,8 @@ function ligneVersDossier(cells, colMap) {
   if (!mois) mois = $('monthSelect').value;
   let rentab = colMap.rentab === undefined ? 0 : parseMoney(get(colMap.rentab));
   if (!rentab) rentab = val('rentabDefaut');
-  return { dossier: { id: uid++, client: client, facture: facture,
-                      montant: Math.round(ttc * 100) / 100, mois: mois, rentab: rentab } };
+  return { dossier: { id: uid++, client: client, source: 'rack',
+                      montant: Math.round(ttc * 100) / 100, mois: mois, rentab: rentab, paye: false } };
 }
 function integrer(lignes, colMap) {
   let ok = 0, avoirs = 0, vides = 0;
@@ -1249,11 +1313,11 @@ function integrer(lignes, colMap) {
   });
   refreshFilter();
   update();
-  if (ok) markDirty();
-  const bits = ['<strong>' + ok + '</strong> dossier' + (ok>1?'s':'') + ' importé' + (ok>1?'s':'')];
+  if (ok) { markDirty(); persist(); }
+  const bits = ['<strong>' + ok + '</strong> facture' + (ok>1?'s':'') + ' importée' + (ok>1?'s':'')];
   if (avoirs) bits.push(avoirs + ' avoir' + (avoirs>1?'s':'') + ' écarté' + (avoirs>1?'s':''));
   if (vides) bits.push(vides + ' ligne' + (vides>1?'s':'') + ' vide' + (vides>1?'s':'') + ' ignorée' + (vides>1?'s':''));
-  toast(bits.join(' · ') + (ok ? '. Pense à enregistrer le mois.' : '.'));
+  toast(bits.join(' · ') + (ok ? '. Pense à régler la source (rack/protection) dans le tableau.' : '.'));
 }
 function estEntete(cells, colMap) {
   const t = String(cells[(colMap || COL_TEMPLATE).client] || '').toLowerCase();
@@ -1340,44 +1404,46 @@ $('pipeBody').addEventListener('input', function (e) {
   const tr = e.target.closest('tr');
   const d = dossiers.filter(x => x.id === +tr.getAttribute('data-id'))[0];
   if (!d) return;
-  d[f] = (f === 'montant' || f === 'rentab') ? (parseFloat(e.target.value) || 0) : e.target.value;
+  if (f === 'montant' || f === 'rentab') d[f] = parseFloat(e.target.value) || 0;
+  else if (f === 'paye') d.paye = (e.target.value === '1');
+  else d[f] = e.target.value;
+
   if (f === 'montant' || f === 'rentab') {
     const marge = d.montant * d.rentab / 100;
     const cell = tr.querySelector('td.calc');
     cell.textContent = fmt(marge);
     cell.style.color = marge >= 0 ? 'var(--green)' : 'var(--red)';
   }
-  if (f === 'mois') {
-    const st = statusOf(d.mois);
+  if (f === 'mois' || f === 'paye') {
+    const st = statusOf(d);
     const tag = tr.querySelector('.status-tag');
     tag.className = 'status-tag ' + st[0];
     tag.textContent = st[1];
+    tr.classList.toggle('paid', !!d.paye);
     refreshFilter();
   }
   refreshTotals();
+  renderForecast();
   markDirty();
+  persist();
 });
 $('pipeBody').addEventListener('change', function (e) { if (e.target.getAttribute('data-f')) renderPipeline(); });
 $('pipeBody').addEventListener('click', function (e) {
   const id = e.target.getAttribute('data-del');
   if (!id) return;
   dossiers = dossiers.filter(d => d.id !== +id);
-  refreshFilter(); renderPipeline(); markDirty();
+  refreshFilter(); renderPipeline(); renderForecast(); markDirty(); persist();
 });
 $('btnAddRow').addEventListener('click', function () {
   const f = $('filterMonth').value;
-  dossiers.push({ id: uid++, client:'', facture:'', montant:0,
-                  mois: f !== 'all' ? f : $('monthSelect').value, rentab: val('rentabDefaut') });
-  refreshFilter(); renderPipeline(); markDirty();
+  dossiers.push({ id: uid++, client:'', source:'rack', montant:0,
+                  mois: f !== 'all' ? f : $('monthSelect').value, rentab: val('rentabDefaut'), paye:false });
+  refreshFilter(); renderPipeline(); renderForecast(); markDirty(); persist();
   const inputs = $('pipeBody').querySelectorAll('tr:last-child input');
   if (inputs.length) inputs[0].focus();
 });
 $('filterMonth').addEventListener('change', renderPipeline);
-$('btnSyncPipe').addEventListener('click', function () {
-  $('apayer').value = Math.round(pipeStats().montant);
-  markDirty(); update();
-  toast('Total du pipeline reporté dans l\'encaissement prévu.');
-});
+$('filterStatut').addEventListener('change', renderPipeline);
 
 Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
   t.addEventListener('click', function () {
@@ -1409,7 +1475,8 @@ function chargerMois(m) {
     dirty = false;
     toast('Mois de ' + monthLabel(m) + ' chargé depuis la mémoire.');
   } else {
-    /* Nouveau mois : on repart de la structure du mois précédent enregistré */
+    /* Nouveau mois : on repart de la structure du mois précédent enregistré.
+       Le suivi des factures reste global : on n'y touche pas. */
     const prec = archive[moisPrecedent(m)];
     loading = true;
     if (prec) {
@@ -1424,11 +1491,6 @@ function chargerMois(m) {
       $('caCumulAnt').value = Math.round(cum.ca);
       $('coutsCumulAnt').value = Math.round(cum.couts);
       $('tauxM1').value = (cum.taux * 100).toFixed(2);
-      $('retard').value = 0;
-      $('apayer').value = 0;
-      $('totalFacture').value = 0;
-      dossiers = [];
-      refreshFilter();
       loading = false;
       update();
       toast('Nouveau mois préparé à partir de ' + monthLabel(moisPrecedent(m)) +
@@ -1447,8 +1509,9 @@ function chargerMois(m) {
 $('btnSaveMonth').addEventListener('click', saveMonth);
 $('btnExport').addEventListener('click', function () {
   const courant = snapshot();
-  const data = { version: 2, exportedAt: new Date().toISOString(),
-                 moisCourant: $('monthSelect').value, courant: courant, archive: archive };
+  const data = { version: 3, exportedAt: new Date().toISOString(),
+                 moisCourant: $('monthSelect').value, courant: courant,
+                 archive: archive, dossiers: serialiseDossiers() };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1468,17 +1531,30 @@ $('fileJson').addEventListener('change', function (e) {
       if (d.archive) archive = d.archive;
       else if (d.champs) { /* sauvegarde v1 */
         const s = {}; Object.keys(d.champs).forEach(k => s[k] = d.champs[k]);
-        s.salaireInclus = d.salaireInclus; s.dossiers = d.dossiers || [];
+        s.salaireInclus = d.salaireInclus;
         archive[d.mois || $('monthSelect').value] = s;
+      }
+      /* Dossiers : globaux (v3) ou récupérés depuis un ancien snapshot (v2) */
+      if (Array.isArray(d.dossiers)) {
+        dossiers = d.dossiers.map(x => ({
+          id: uid++, client: x.client || '', source: x.source || 'rack',
+          montant: +x.montant || 0, mois: x.mois || '', rentab: +x.rentab || 0, paye: !!x.paye
+        }));
+      } else if (d.courant && Array.isArray(d.courant.dossiers)) {
+        dossiers = d.courant.dossiers.map(x => ({
+          id: uid++, client: x.client || '', source: x.source || 'rack',
+          montant: +x.montant || 0, mois: x.mois || '', rentab: +x.rentab || 0, paye: !!x.paye
+        }));
       }
       const m = d.moisCourant || d.mois || $('monthSelect').value;
       $('monthSelect').value = m;
       moisActuel = m;
       if (d.courant) { applySnapshot(d.courant); dirty = false; }
       else if (archive[m]) { applySnapshot(archive[m]); dirty = false; }
+      refreshFilter();
       persist().then(function () {
-        renderHistorique(); updateSaveState();
-        toast('Sauvegarde restaurée : <strong>' + Object.keys(archive).length + ' mois</strong> dans l\'historique.');
+        renderHistorique(); updateSaveState(); update();
+        toast('Sauvegarde restaurée : <strong>' + Object.keys(archive).length + ' mois</strong> et <strong>' + dossiers.length + ' facture' + (dossiers.length>1?'s':'') + '</strong>.');
       });
     } catch (err) {
       toast('Fichier illisible — utilise un export de cet outil.');
@@ -1493,7 +1569,7 @@ $('fileJson').addEventListener('change', function (e) {
   const mois = listeMois(MOIS_DEBUT, MOIS_FIN);
   const now = new Date();
   let defaut = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  if (mois.indexOf(defaut) === -1) defaut = '2026-07';
+  if (mois.indexOf(defaut) === -1) defaut = '2026-08';
 
   $('monthSelect').innerHTML = mois.map(m =>
     '<option value="' + m + '"' + (m === defaut ? ' selected' : '') + '>' + monthLabel(m) + '</option>').join('');
@@ -1504,17 +1580,24 @@ $('fileJson').addEventListener('change', function (e) {
   Store.detect();
   $('storageInfo').textContent = Store.label();
   $('footNote').textContent = Store.mode === 'claude'
-    ? 'Mémoire persistante · modèle d\'import Excel fourni séparément'
-    : 'Mémoire navigateur · pense à exporter régulièrement';
+    ? 'Mémoire persistante · suivi des factures global · modèle d\'import Excel fourni séparément'
+    : 'Mémoire navigateur · suivi des factures global · pense à exporter régulièrement';
 
   Store.get(STORE_KEY).then(function (data) {
     if (data && data.archive) archive = data.archive;
+    if (data && Array.isArray(data.dossiers)) {
+      dossiers = data.dossiers.map(x => ({
+        id: uid++, client: x.client || '', source: x.source || 'rack',
+        montant: +x.montant || 0, mois: x.mois || '', rentab: +x.rentab || 0, paye: !!x.paye
+      }));
+    }
+    refreshFilter();
     if (archive[defaut]) { applySnapshot(archive[defaut]); dirty = false; }
     else { update(); }
     renderHistorique();
     updateSaveState();
   }).catch(function () {
-    update(); renderHistorique(); updateSaveState();
+    refreshFilter(); update(); renderHistorique(); updateSaveState();
   });
 })();
 </script>
